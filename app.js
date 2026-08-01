@@ -330,6 +330,8 @@ function createCard(post) {
 
   const statusClass = post.status === "確認済み" ? "verified" : "unverified";
   const mediaLabel = post.media === "video" ? "動画" : post.media === "image" ? "画像" : "";
+  const isSearchLink = post.sourceLinkType === "search" || /https:\/\/x\.com\/search\?/.test(post.sourceUrl);
+  const sourceButtonLabel = isSearchLink ? "Xで該当投稿を探す" : "元投稿を開く";
   const visibleTags = post.attributes.slice(0, 4);
   const extraTagCount = Math.max(0, post.attributes.length - visibleTags.length);
 
@@ -363,12 +365,13 @@ function createCard(post) {
         <div><dt>投稿日時</dt><dd>${formatDate(post.postedAt)}</dd></div>
         <div><dt>登録日時</dt><dd>${formatDate(post.registeredAt)}</dd></div>
         <div><dt>信頼度</dt><dd>${escapeHtml(post.confidence)}</dd></div>
+        ${isSearchLink ? "<div><dt>リンク</dt><dd>X検索結果（元投稿URL要確認）</dd></div>" : ""}
       </dl>
     </details>
 
     ${post.isSample
       ? '<span class="source-button disabled">架空サンプル</span>'
-      : `<a class="source-button" href="${escapeAttribute(post.sourceUrl)}" target="_blank" rel="noopener noreferrer">元投稿を開く <span aria-hidden="true">↗</span></a>`}
+      : `<a class="source-button" href="${escapeAttribute(post.sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(sourceButtonLabel)} <span aria-hidden="true">↗</span></a>`}
   `;
 
   return article;
