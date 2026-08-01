@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sample-sandalphon-001",
+    "title": "【架空サンプル】サンダルフォンのコンボ確認メモ",
+    "summary": "これはカード表示を確認するための架空サンプルです。通常攻撃からアビリティへつなぐ想定の要点が、2文程度の独自要約としてここに表示されます。",
+    "category": "サンダルフォン",
+    "attributes": ["コンボ", "動画"],
+    "sourceUrl": "https://example.com/fictional-sample-sandalphon-001",
+    "author": "架空サンプル投稿者",
+    "postedAt": "2026-01-15T12:00:00+09:00",
+    "registeredAt": "2026-01-16T09:30:00+09:00",
+    "usefulness": 82,
+    "confidence": "中",
+    "status": "未確認",
+    "media": "video",
+    "isSample": true
+  },
+  {
+    "id": "sample-weapon-001",
+    "title": "【架空サンプル】ジーン構成の比較検証",
+    "summary": "これは実在の投稿に基づかない、動作確認専用のデータです。複数の構成を比較した攻略情報なら、前提条件と結論を簡潔に要約して掲載します。",
+    "category": "ジーン、武器",
+    "attributes": ["装備", "検証", "火力"],
+    "sourceUrl": "https://example.com/fictional-sample-weapon-001",
+    "author": "架空サンプル投稿者",
+    "postedAt": "2026-01-12T18:20:00+09:00",
+    "registeredAt": "2026-01-14T10:00:00+09:00",
+    "usefulness": 91,
+    "confidence": "高",
+    "status": "確認済み",
+    "media": "image",
+    "isSample": true
+  },
+  {
+    "id": "sample-cpu-001",
+    "title": "【架空サンプル】CPU編成の安定性メモ",
+    "summary": "これは機能確認のために用意した架空サンプルです。CPU編成や放置周回の情報では、対象クエストと再現条件が分かるように要約します。",
+    "category": "CPU、放置",
+    "attributes": ["CPU", "放置"],
+    "sourceUrl": "https://example.com/fictional-sample-cpu-001",
+    "author": "架空サンプル投稿者",
+    "postedAt": "2026-01-10T08:00:00+09:00",
+    "registeredAt": "2026-01-11T08:00:00+09:00",
+    "usefulness": 75,
+    "confidence": "低",
+    "status": "要追加検証",
+    "media": "none",
+    "isSample": true
+  }
+]
