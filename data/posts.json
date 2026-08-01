@@ -1,50 +1,203 @@
 [
   {
-    "id": "sample-sandalphon-001",
-    "title": "【架空サンプル】サンダルフォンのコンボ確認メモ",
-    "summary": "これはカード表示を確認するための架空サンプルです。通常攻撃からアビリティへつなぐ想定の要点が、2文程度の独自要約としてここに表示されます。",
-    "category": "サンダルフォン",
-    "attributes": ["コンボ", "動画"],
-    "sourceUrl": "https://example.com/fictional-sample-sandalphon-001",
-    "author": "架空サンプル投稿者",
-    "postedAt": "2026-01-15T12:00:00+09:00",
-    "registeredAt": "2026-01-16T09:30:00+09:00",
-    "usefulness": 82,
-    "confidence": "中",
-    "status": "未確認",
-    "media": "video",
-    "isSample": true
-  },
-  {
-    "id": "sample-weapon-001",
-    "title": "【架空サンプル】ジーン構成の比較検証",
-    "summary": "これは実在の投稿に基づかない、動作確認専用のデータです。複数の構成を比較した攻略情報なら、前提条件と結論を簡潔に要約して掲載します。",
-    "category": "ジーン、武器",
-    "attributes": ["装備", "検証", "火力"],
-    "sourceUrl": "https://example.com/fictional-sample-weapon-001",
-    "author": "架空サンプル投稿者",
-    "postedAt": "2026-01-12T18:20:00+09:00",
-    "registeredAt": "2026-01-14T10:00:00+09:00",
-    "usefulness": 91,
+    "id": "x-2075541435886309694",
+    "title": "召喚石は最大4つ装備、ランダムスキルも確認",
+    "summary": "Endless Ragnarokの召喚は、装備した召喚石から使用します。最大4つまで装備でき、召喚効果に加えてランダムなスキル効果も付くため、召喚対象だけでなく付与効果も確認して選ぶ必要があります。",
+    "category": "召喚石",
+    "attributes": [
+      "召喚石",
+      "装備",
+      "加護",
+      "アップデート"
+    ],
+    "sourceUrl": "https://x.com/relink_official/status/2075541435886309694",
+    "author": "@relink_official",
+    "postedAt": "2026-07-10T20:23:34+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 96,
     "confidence": "高",
     "status": "確認済み",
-    "media": "image",
-    "isSample": true
+    "media": "image"
   },
   {
-    "id": "sample-cpu-001",
-    "title": "【架空サンプル】CPU編成の安定性メモ",
-    "summary": "これは機能確認のために用意した架空サンプルです。CPU編成や放置周回の情報では、対象クエストと再現条件が分かるように要約します。",
-    "category": "CPU、放置",
-    "attributes": ["CPU", "放置"],
-    "sourceUrl": "https://example.com/fictional-sample-cpu-001",
-    "author": "架空サンプル投稿者",
-    "postedAt": "2026-01-10T08:00:00+09:00",
-    "registeredAt": "2026-01-11T08:00:00+09:00",
-    "usefulness": 75,
+    "id": "x-2075541337693421677",
+    "title": "前作セーブから後章を始める条件",
+    "summary": "アップグレードキットと前作セーブデータを使う場合、指定クエストと極沌空所第3層のクリアがメインストーリー開始条件です。さらにシードホルムのサイドクエストを進めると、極沌空所の追加階層が解放されます。",
+    "category": "最新情報",
+    "attributes": [
+      "アップデート",
+      "初心者",
+      "高難度",
+      "ボス攻略"
+    ],
+    "sourceUrl": "https://x.com/relink_official/status/2075541337693421677",
+    "author": "@relink_official",
+    "postedAt": "2026-07-10T20:23:11+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 98,
+    "confidence": "高",
+    "status": "確認済み",
+    "media": "image"
+  },
+  {
+    "id": "x-2076462437893898294",
+    "title": "ソーンとヘラクレスの相性に疑問",
+    "summary": "投稿者は、鏑矢が一度で消費されるためクリンチャーのヒット数増加以外の恩恵が小さく、ソーンではヘラクレスを活かしにくいのではないかと指摘しています。個人の使用感に基づく見解で、詳細な数値検証は未確認です。",
+    "category": "ソーン",
+    "attributes": [
+      "アビリティ",
+      "装備",
+      "武器",
+      "検証"
+    ],
+    "sourceUrl": "https://x.com/kitunenonaka/status/2076462437893898294",
+    "author": "@kitunenonaka",
+    "postedAt": "2026-07-13T09:23:18+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 65,
+    "confidence": "低",
+    "status": "未確認",
+    "media": "none"
+  },
+  {
+    "id": "x-2076462414321885584",
+    "title": "ダメージ上限がジーン自由枠を圧迫するという意見",
+    "summary": "ダメージ上限を確保するためのジーン枠が多く、前作以上に自由枠が少ないという使用感の投稿です。具体的な構成や上限計算は示されていないため、環境傾向を知る参考意見として掲載しています。",
+    "category": "ジーン・武器",
+    "attributes": [
+      "ジーン",
+      "ダメージ上限",
+      "装備"
+    ],
+    "sourceUrl": "https://x.com/baten23022/status/2076462414321885584",
+    "author": "@baten23022",
+    "postedAt": "2026-07-13T09:23:13+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 62,
+    "confidence": "低",
+    "status": "未確認",
+    "media": "none"
+  },
+  {
+    "id": "x-2076461766457094636",
+    "title": "上限200％時は攻撃力ジーンが不要になる可能性",
+    "summary": "投稿者は、構成を変えてもダメージ上限表示が200％付近になるため、攻撃力上昇系ジーンの優先度が低いのではないかと考察しています。木人値や攻撃別の上限到達状況は示されておらず、追加検証が必要です。",
+    "category": "ジーン・武器",
+    "attributes": [
+      "ジーン",
+      "ダメージ上限",
+      "火力",
+      "検証"
+    ],
+    "sourceUrl": "https://x.com/Himo_Red/status/2076461766457094636",
+    "author": "@Himo_Red",
+    "postedAt": "2026-07-13T09:20:38+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 72,
     "confidence": "低",
     "status": "要追加検証",
-    "media": "none",
-    "isSample": true
+    "media": "none"
+  },
+  {
+    "id": "x-2076461716645511587",
+    "title": "MS50・覚醒武器最大強化後のルシファー編成報告",
+    "summary": "3人分のマスターレベル50と覚醒武器最大強化を終え、インフィニティのルシファーへ挑む編成が形になったという進捗報告です。装備画像はありますが、安定周回の成否や再現条件はまだ確認できません。",
+    "category": "ボス攻略",
+    "attributes": [
+      "マスタースキル",
+      "武器",
+      "育成",
+      "高難度",
+      "ボス攻略",
+      "マルチ"
+    ],
+    "sourceUrl": "https://x.com/saLtgiogio/status/2076461716645511587",
+    "author": "@saLtgiogio",
+    "postedAt": "2026-07-13T09:20:26+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 70,
+    "confidence": "低",
+    "status": "未確認",
+    "media": "image"
+  },
+  {
+    "id": "x-2076461391477907475",
+    "title": "極沌空所では素材が貯まる一方でMSP不足",
+    "summary": "極沌空所を進めるとルピや素材は蓄積しやすい一方、マスタースキルの用途が多くMSPが不足し続けるという進行報告です。具体的な周回層や獲得量は記載されていないため、育成計画の注意点として扱います。",
+    "category": "マスタースキル",
+    "attributes": [
+      "マスタースキル",
+      "素材集め",
+      "周回",
+      "育成"
+    ],
+    "sourceUrl": "https://x.com/r_floor/status/2076461391477907475",
+    "author": "@r_floor",
+    "postedAt": "2026-07-13T09:19:09+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 74,
+    "confidence": "中",
+    "status": "未確認",
+    "media": "none"
+  },
+  {
+    "id": "x-2076461161198002669",
+    "title": "出社前・就寝前に放置周回する運用例",
+    "summary": "出社前と就寝前に起動して放置周回する、社会人向けの運用例を紹介した投稿です。具体的なクエストや編成は示されていませんが、長時間の自動周回を前提にした遊び方の参考になります。",
+    "category": "CPU・放置",
+    "attributes": [
+      "放置",
+      "フルアシスト",
+      "CPU",
+      "周回"
+    ],
+    "sourceUrl": "https://x.com/fubuki_7_/status/2076461161198002669",
+    "author": "@fubuki_7_",
+    "postedAt": "2026-07-13T09:18:14+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 55,
+    "confidence": "低",
+    "status": "未確認",
+    "media": "none"
+  },
+  {
+    "id": "x-2076460208340312137",
+    "title": "マギラフリラ放置で60秒3億という報告",
+    "summary": "マギラフリラを放置運用し、60秒で約3億ダメージが出たという短い報告です。装備、相手、計測条件が記載されていないため数値の再現性は不明で、追加検証が必要です。",
+    "category": "マギラフリラ",
+    "attributes": [
+      "放置",
+      "CPU",
+      "火力",
+      "検証"
+    ],
+    "sourceUrl": "https://x.com/poipoi_ez/status/2076460208340312137",
+    "author": "@poipoi_ez",
+    "postedAt": "2026-07-13T09:14:27+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 78,
+    "confidence": "低",
+    "status": "要追加検証",
+    "media": "none"
+  },
+  {
+    "id": "x-2076459901132607537",
+    "title": "超越後の編成セット呼び出しでEXスキル消失の可能性",
+    "summary": "投稿者は、超越7段階目を行う前に登録した編成セットを、超越後に呼び出すとEXスキルが消える可能性を報告しています。表示上だけの問題かは未検証で、回避策として超越後に編成セットを再登録する方法を挙げています。",
+    "category": "システム・検証",
+    "attributes": [
+      "バグ・不具合",
+      "装備",
+      "武器",
+      "検証"
+    ],
+    "sourceUrl": "https://x.com/udon_koime/status/2076459901132607537",
+    "author": "@udon_koime",
+    "postedAt": "2026-07-13T09:13:13+09:00",
+    "registeredAt": "2026-08-01T18:45:00+09:00",
+    "usefulness": 92,
+    "confidence": "中",
+    "status": "要追加検証",
+    "media": "image"
   }
 ]
