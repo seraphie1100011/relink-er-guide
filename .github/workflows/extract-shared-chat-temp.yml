@@ -1,0 +1,40 @@
+name: Extract shared ChatGPT conversation
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    if: github.head_ref == 'extract-shared-chat-temp'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare extractor
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install requests
+          git clone --depth 1 https://github.com/vl3c/ChatPeek.git /tmp/ChatPeek
+
+      - name: Extract shared conversation
+        run: |
+          mkdir -p extracted
+          python /tmp/ChatPeek/ChatPeek.py \
+            'https://chatgpt.com/share/6a6dd59a-64c0-83e8-b876-1d347c36e215' \
+            --output extracted \
+            --skip-assets
+          find extracted -type f -maxdepth 2 -print
+
+      - name: Upload extraction
+        uses: actions/upload-artifact@v4
+        with:
+          name: shared-chat-extraction
+          path: extracted/**/*.md
+          if-no-files-found: error
+          retention-days: 1
