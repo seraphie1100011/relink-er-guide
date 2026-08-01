@@ -1,128 +1,158 @@
 <!doctype html>
-<html lang="ja" data-theme="dark">
+<html lang="ja" data-theme="sky">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="グランブルーファンタジー リリンク エンドレスラグナロクの攻略情報を、キャラクター別に探せる非公式ガイドです。">
-  <meta name="color-scheme" content="dark light">
-  <title>RE:LINK ER GUIDE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="グランブルーファンタジー リリンク エンドレスラグナロクの攻略情報を、全プレイアブルキャラクターと補助属性から探せる非公式ガイドです。">
+  <meta name="color-scheme" content="light dark">
+  <title>蒼空攻略録 | Relink Endless Ragnarok</title>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#posts">攻略情報へスキップ</a>
 
+  <div class="sky-decoration sky-decoration-one" aria-hidden="true"></div>
+  <div class="sky-decoration sky-decoration-two" aria-hidden="true"></div>
+
   <header class="site-header">
     <div class="header-inner">
-      <a class="brand" href="./" aria-label="RE:LINK ER GUIDE トップ">
-        <span class="brand-mark" aria-hidden="true">ER</span>
-        <span><strong>RE:LINK ER GUIDE</strong><small>UNOFFICIAL ARCHIVE</small></span>
+      <a class="brand" href="./" aria-label="蒼空攻略録 トップ">
+        <span class="brand-crest" aria-hidden="true"><span>ER</span></span>
+        <span class="brand-copy">
+          <strong>蒼空攻略録</strong>
+          <small>RELINK ENDLESS RAGNAROK</small>
+        </span>
       </a>
-      <button id="themeToggle" class="icon-button" type="button" aria-label="ライトモードに切り替え" title="表示テーマを切り替え">
-        <span aria-hidden="true">☼</span>
+      <button id="themeToggle" class="theme-button" type="button" aria-label="夜空テーマに切り替え">
+        <span aria-hidden="true">☾</span>
+        <span class="theme-label">夜空</span>
       </button>
     </div>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="pageTitle">
-      <p class="eyebrow">ENDLESS RAGNAROK</p>
-      <h1 id="pageTitle">キャラクターから<br>攻略情報を探す</h1>
-      <p>Xなどで共有された攻略情報を、キャラクターごとに見つけやすく整理した非公式アーカイブです。</p>
-      <div class="hero-stats" aria-label="掲載状況">
-        <div><strong id="totalCount">—</strong><span>収録情報</span></div>
-        <div><strong id="verifiedCount">—</strong><span>確認済み</span></div>
-        <div><strong id="updatedDate">—</strong><span>最終登録</span></div>
+      <div class="hero-copy">
+        <p class="hero-kicker"><span aria-hidden="true">✦</span> SKYFARER'S ARCHIVE <span aria-hidden="true">✦</span></p>
+        <h1 id="pageTitle"><span>蒼の空に集う</span><br>攻略の記録</h1>
+        <p class="hero-description">キャラクター、装備、立ち回り、周回情報を、元投稿へのリンクと独自要約で整理する非公式アーカイブです。</p>
       </div>
+      <div class="hero-emblem" aria-hidden="true">
+        <span class="emblem-ring"></span>
+        <span class="emblem-wing emblem-wing-left"></span>
+        <span class="emblem-core">ER</span>
+        <span class="emblem-wing emblem-wing-right"></span>
+      </div>
+      <dl class="hero-stats" aria-label="掲載状況">
+        <div><dt>収録情報</dt><dd id="totalCount">—</dd></div>
+        <div><dt>確認済み</dt><dd id="verifiedCount">—</dd></div>
+        <div><dt>最終登録</dt><dd id="updatedDate">—</dd></div>
+      </dl>
     </section>
 
-    <section class="explorer" aria-labelledby="characterTitle">
+    <section class="finder ornate-panel" aria-labelledby="finderTitle">
+      <div class="panel-ornament" aria-hidden="true"><span></span></div>
       <div class="section-heading">
         <div>
-          <span class="section-number">01</span>
-          <h2 id="characterTitle">キャラクターを選ぶ</h2>
+          <p class="section-kicker">SEARCH THE ARCHIVE</p>
+          <h2 id="finderTitle">攻略情報を探す</h2>
         </div>
+        <button id="resetFilters" class="reset-button" type="button">選択をリセット</button>
       </div>
 
-      <div id="characterFilters" class="character-grid" role="group" aria-label="キャラクターで絞り込み"></div>
-
-      <button id="otherCategoryToggle" class="filter-opener" type="button" aria-expanded="false" aria-controls="otherCategoryPanel">
-        <span>
-          <small>キャラクター以外</small>
-          <strong id="categorySelection">選択していません</strong>
-        </span>
-        <span class="opener-icon" aria-hidden="true">＋</span>
-      </button>
-      <div id="otherCategoryPanel" class="filter-panel" hidden>
-        <div id="otherCategoryFilters" class="choice-list" role="group" aria-label="その他の分類で絞り込み"></div>
-      </div>
-    </section>
-
-    <section class="search-section" aria-labelledby="filterTitle">
-      <div class="section-heading">
-        <div>
-          <span class="section-number">02</span>
-          <h2 id="filterTitle">さらに絞り込む</h2>
-        </div>
-        <button id="resetFilters" class="text-button" type="button">条件をリセット</button>
+      <div class="selection-guide">
+        <span class="guide-number">1</span>
+        <div><strong>キャラクターを選択</strong><small>全プレイアブルキャラクターから選べます</small></div>
       </div>
 
-      <div class="search-wrap">
+      <label class="select-field select-field-primary" for="characterSelect">
+        <span class="field-icon" aria-hidden="true">♜</span>
+        <span class="field-copy"><small>CHARACTER</small><strong>キャラクター</strong></span>
+        <select id="characterSelect" aria-describedby="characterHelp"></select>
+        <span class="select-arrow" aria-hidden="true">⌄</span>
+      </label>
+      <p id="characterHelp" class="field-help">タップすると、主人公からEndless Ragnarok追加キャラクターまで一覧が開きます。</p>
+
+      <div class="selection-guide selection-guide-secondary">
+        <span class="guide-number">2</span>
+        <div><strong>内容を絞り込む</strong><small>補助属性と大分類は必要な場合だけ選択します</small></div>
+      </div>
+
+      <div class="select-grid">
+        <label class="select-field" for="attributeSelect">
+          <span class="field-icon" aria-hidden="true">✧</span>
+          <span class="field-copy"><small>ATTRIBUTE</small><strong>補助属性</strong></span>
+          <select id="attributeSelect"></select>
+          <span class="select-arrow" aria-hidden="true">⌄</span>
+        </label>
+
+        <label class="select-field" for="categorySelect">
+          <span class="field-icon" aria-hidden="true">▦</span>
+          <span class="field-copy"><small>CATEGORY</small><strong>大分類</strong></span>
+          <select id="categorySelect"></select>
+          <span class="select-arrow" aria-hidden="true">⌄</span>
+        </label>
+      </div>
+
+      <label class="search-field" for="searchInput">
         <span aria-hidden="true">⌕</span>
-        <label class="sr-only" for="searchInput">キーワード検索</label>
-        <input id="searchInput" type="search" placeholder="装備、コンボ、ボス名などを検索" autocomplete="off">
-      </div>
+        <span class="sr-only">キーワード検索</span>
+        <input id="searchInput" type="search" placeholder="ボス名、ジーン、コンボなどを検索" autocomplete="off">
+      </label>
 
-      <button id="attributeToggle" class="filter-opener" type="button" aria-expanded="false" aria-controls="attributePanel">
-        <span>
-          <small>補助属性</small>
-          <strong id="attributeSelection">すべて</strong>
-        </span>
-        <span class="opener-icon" aria-hidden="true">＋</span>
-      </button>
-      <div id="attributePanel" class="filter-panel" hidden>
-        <p>確認したい内容を1つ選んでください。</p>
-        <div id="attributeFilters" class="choice-list" role="group" aria-label="補助属性で絞り込み"></div>
+      <div id="activeFilterSummary" class="selected-route" aria-live="polite">
+        <span class="route-label">現在の選択</span>
+        <span id="selectedRouteText">すべての攻略情報</span>
       </div>
     </section>
 
     <section class="results" aria-labelledby="resultsTitle">
-      <div class="results-bar">
+      <div class="results-heading">
         <div>
-          <span class="section-number">03</span>
-          <h2 id="resultsTitle">攻略情報</h2>
+          <p class="section-kicker">LATEST RECORDS</p>
+          <h2 id="resultsTitle">攻略記録</h2>
           <span id="resultCount" class="result-count" aria-live="polite"></span>
         </div>
-        <label class="sort-select">並び順
+        <label class="sort-field" for="sortSelect">
+          <span>並び順</span>
           <select id="sortSelect">
-            <option value="newest">新着順</option>
-            <option value="useful">有用性順</option>
+            <option value="newest">登録が新しい順</option>
+            <option value="postedNewest">投稿が新しい順</option>
+            <option value="useful">有用性が高い順</option>
+            <option value="oldest">登録が古い順</option>
           </select>
         </label>
       </div>
 
-      <div id="activeFilterSummary" class="active-filter-summary" aria-live="polite"></div>
       <div id="sampleNotice" class="sample-notice" hidden>
-        <strong>DEMO DATA</strong>
-        <span>現在表示中の項目は、レイアウト確認用の架空サンプルです。実在の投稿ではありません。</span>
-      </div>
-      <div id="posts" class="post-grid" aria-live="polite" aria-busy="true"></div>
-      <div id="emptyState" class="empty-state" hidden>
-        <span aria-hidden="true">◇</span>
-        <h3>該当する情報がありません</h3>
-        <p>キャラクターや絞り込み条件を変更してください。</p>
-      </div>
-      <div id="errorState" class="empty-state error" hidden>
         <span aria-hidden="true">!</span>
-        <h3>情報を読み込めませんでした</h3>
-        <p>ページを再読み込みしてください。</p>
+        <div><strong>表示確認用サンプル</strong><p>現在の項目は架空データです。実在する投稿ではありません。</p></div>
+      </div>
+
+      <div id="posts" class="post-grid" aria-live="polite" aria-busy="true"></div>
+
+      <div id="emptyState" class="empty-state" hidden>
+        <span class="empty-emblem" aria-hidden="true">◇</span>
+        <h3>条件に合う攻略情報がありません</h3>
+        <p>キャラクターまたは補助属性を変更してください。</p>
+        <button id="emptyResetButton" type="button">すべて表示する</button>
+      </div>
+
+      <div id="errorState" class="empty-state error-state" hidden>
+        <span class="empty-emblem" aria-hidden="true">!</span>
+        <h3>攻略情報を読み込めませんでした</h3>
+        <p>時間を置いてページを再読み込みしてください。</p>
       </div>
     </section>
   </main>
 
   <footer>
-    <p><strong>RE:LINK ER GUIDE</strong><br><small>UNOFFICIAL COMMUNITY ARCHIVE</small></p>
-    <p>本サイトは非公式ファンサイトです。要約内容を確認のうえ、必ず元投稿もご覧ください。</p>
+    <div class="footer-brand">
+      <span class="brand-crest small" aria-hidden="true"><span>ER</span></span>
+      <p><strong>蒼空攻略録</strong><small>UNOFFICIAL COMMUNITY ARCHIVE</small></p>
+    </div>
+    <p>本サイトは非公式ファンサイトです。公式画像や投稿内メディアを転載せず、独自要約と元投稿へのリンクを掲載します。</p>
   </footer>
 </body>
 </html>
