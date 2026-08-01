@@ -1,0 +1,72 @@
+name: Improve dark mode contrast
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  improve:
+    if: github.head_ref == 'improve-dark-contrast'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Add dark mode contrast overrides
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('styles.css')
+          css = path.read_text(encoding='utf-8')
+          marker = '/* Dark mode contrast correction */'
+          if marker not in css:
+              css += r'''
+
+          /* Dark mode contrast correction */
+          [data-theme="dark"] .period-tab.is-active,
+          [data-theme="dark"] .topic-card-head,
+          [data-theme="dark"] .source-button {
+            background: linear-gradient(105deg, #0b2940, #165176);
+            color: #f7fbff;
+          }
+
+          [data-theme="dark"] .period-tab.is-active strong,
+          [data-theme="dark"] .topic-card-head strong,
+          [data-theme="dark"] .topic-card-head small,
+          [data-theme="dark"] .topic-card-head b,
+          [data-theme="dark"] .topic-card-head b small,
+          [data-theme="dark"] .source-button {
+            color: #f7fbff;
+          }
+
+          [data-theme="dark"] .period-tab.is-active,
+          [data-theme="dark"] .topic-card-head {
+            border-color: #397da7;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, .5);
+          }
+
+          [data-theme="dark"] .source-button:hover {
+            filter: brightness(1.18);
+          }
+          '''
+          path.write_text(css, encoding='utf-8')
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add styles.css
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "ダークモードの水色背景と白文字のコントラストを改善"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
