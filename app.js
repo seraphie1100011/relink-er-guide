@@ -106,7 +106,8 @@ const state = {
   attribute: "すべて",
   category: "すべて",
   query: "",
-  sort: "newest"
+  sort: "newest",
+  expandedCharacters: new Set()
 };
 
 const elements = {};
@@ -427,19 +428,52 @@ function renderDirectories() {
 
 function createCharacterDirectoryCard(character, periodPosts) {
   const posts = periodPosts.filter((post) => post.character === character.value);
+  const expanded = state.expandedCharacters.has(character.value);
+  const characterIndex = DIRECTORY_CHARACTERS.findIndex((item) => item.value === character.value);
+  const panelId = `character-panel-${characterIndex}`;
   const article = document.createElement("article");
-  article.className = `directory-card${state.character === character.value ? " is-active" : ""}`;
+  article.className = `directory-card${expanded ? " is-expanded" : ""}${state.character === character.value ? " is-active" : ""}`;
 
   const header = document.createElement("button");
   header.type = "button";
   header.className = "directory-card-head";
-  header.addEventListener("click", () => selectCharacter(character.value));
+  header.setAttribute("aria-expanded", String(expanded));
+  header.setAttribute("aria-controls", panelId);
+  header.addEventListener("click", () => {
+    if (expanded) state.expandedCharacters.delete(character.value);
+    else state.expandedCharacters.add(character.value);
+    renderDirectories();
+  });
   header.innerHTML = `
     <span><small>${escapeHtml(character.group)}</small><strong>${escapeHtml(character.value)}</strong></span>
-    <b>${posts.length}<small>件</small></b>
+    <span class="directory-card-count">
+      <b>${posts.length}<small>件</small></b>
+      <i aria-hidden="true">${expanded ? "−" : "＋"}</i>
+    </span>
   `;
 
-  article.append(header, createDirectoryTitleList(posts));
+  article.append(header);
+
+  if (expanded) {
+    const panel = document.createElement("div");
+    panel.id = panelId;
+    panel.className = "directory-expanded";
+
+    const actions = document.createElement("div");
+    actions.className = "directory-expanded-actions";
+
+    const detailsButton = document.createElement("button");
+    detailsButton.type = "button";
+    detailsButton.className = "directory-detail-button";
+    detailsButton.textContent = "詳しく見る";
+    detailsButton.disabled = posts.length === 0;
+    detailsButton.addEventListener("click", () => selectCharacter(character.value));
+    actions.append(detailsButton);
+
+    panel.append(actions, createDirectoryTitleList(posts, Infinity));
+    article.append(panel);
+  }
+
   return article;
 }
 
@@ -461,7 +495,7 @@ function createTopicDirectoryCard(topic, periodPosts) {
   return article;
 }
 
-function createDirectoryTitleList(posts, limit = 3) {
+function createDirectoryTitleList(posts, limit = Infinity) {
   const wrap = document.createElement("div");
   wrap.className = "directory-titles";
 
@@ -470,8 +504,9 @@ function createDirectoryTitleList(posts, limit = 3) {
     return wrap;
   }
 
+  const visiblePosts = Number.isFinite(limit) ? posts.slice(0, limit) : posts;
   const list = document.createElement("ul");
-  for (const post of posts.slice(0, limit)) {
+  for (const post of visiblePosts) {
     const item = document.createElement("li");
     const link = document.createElement("a");
     link.href = post.sourceUrl;
@@ -484,7 +519,7 @@ function createDirectoryTitleList(posts, limit = 3) {
   }
   wrap.append(list);
 
-  if (posts.length > limit) {
+  if (Number.isFinite(limit) && posts.length > limit) {
     const more = document.createElement("p");
     more.className = "directory-more";
     more.textContent = `ほか ${posts.length - limit}件`;
