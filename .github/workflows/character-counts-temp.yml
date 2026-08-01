@@ -1,0 +1,57 @@
+name: Character counts temp
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  count:
+    if: github.head_ref == 'fill-character-minimum-three-20260802'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Count character posts
+        run: |
+          python - <<'PY'
+          import json
+          from collections import Counter
+          from pathlib import Path
+
+          chars = [
+            'カタリナ','ラカム','イオ','オイゲン','ロゼッタ','ランスロット','ヴェイン','パーシヴァル','ジークフリート','シャルロッテ','ヨダルラーハ','ナルメア','ゼタ','バザラガ','フェリ','ガンダゴウザ','カリオストロ','イド','シエテ','ソーン','サンダルフォン','ベアトリクス','ユーステス','ガランツァ','マギラフリラ','フラウ','フェディエル'
+          ]
+          posts = json.loads(Path('data/posts.json').read_text(encoding='utf-8'))
+          counts = Counter()
+          titles = {c: [] for c in chars}
+          for post in posts:
+            raw = str(post.get('character') or '').strip()
+            cat = str(post.get('category') or '').strip()
+            char = raw if raw in chars else cat if cat in chars else ''
+            if char:
+              counts[char] += 1
+              titles[char].append(post.get('title',''))
+          out = {
+            'totalPosts': len(posts),
+            'counts': {c: counts[c] for c in chars},
+            'missingToThree': {c: max(0, 3-counts[c]) for c in chars if counts[c] < 3},
+            'titles': titles
+          }
+          Path('tmp').mkdir(exist_ok=True)
+          Path('tmp/character-counts.json').write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tmp/character-counts.json
+          if ! git diff --cached --quiet; then
+            git commit -m "キャラクター別掲載件数を集計"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
