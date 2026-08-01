@@ -28,6 +28,10 @@ const CHARACTER_GROUPS = [
   }
 ];
 
+const DIRECTORY_CHARACTERS = CHARACTER_GROUPS
+  .flatMap((group) => group.values.map((item) => ({ ...item, group: group.label })))
+  .filter((item) => item.value !== "主人公（グラン／ジータ）");
+
 const ATTRIBUTE_GROUPS = [
   { label: "攻撃", values: ["火力", "通常攻撃", "アビリティ", "奥義", "コンボ", "ダメージ上限", "クリティカル", "追撃", "スタン", "リンク", "ブレイク"] },
   { label: "防御・支援", values: ["回避", "ガード", "無敵", "生存", "回復", "支援", "強化", "弱体"] },
@@ -49,6 +53,39 @@ const CATEGORY_ALIASES = {
   "最新情報": ["最新情報", "アップデート"]
 };
 
+const PERIODS = {
+  all: { label: "全期間", duration: Infinity },
+  day: { label: "過去1日", duration: 24 * 60 * 60 * 1000 },
+  week: { label: "過去1週間", duration: 7 * 24 * 60 * 60 * 1000 },
+  month: { label: "過去1ヶ月", duration: 30 * 24 * 60 * 60 * 1000 }
+};
+
+const HIGH_DIFFICULTY_TERMS = [
+  "高難度", "ボス攻略", "CHAOS", "インフィニティ", "極沌空所", "ルシファー",
+  "ベルゼバブ", "ザ・ワールド", "ワールドの胎動", "天元", "終末のヴィジョン"
+];
+
+const TOPIC_DEFINITIONS = [
+  {
+    id: "highDifficulty",
+    title: "高難易度攻略",
+    subtitle: "CHAOS・インフィニティ・ボス攻略",
+    matches: (post) => post.category === "ボス攻略" || containsAny(post, HIGH_DIFFICULTY_TERMS)
+  },
+  {
+    id: "gene",
+    title: "ジーン情報",
+    subtitle: "構成・上限・スキル検証",
+    matches: (post) => post.category === "ジーン・武器" || post.attributes.includes("ジーン")
+  },
+  {
+    id: "latest",
+    title: "最新情報",
+    subtitle: "公式案内・更新内容・新要素",
+    matches: (post) => post.category === "最新情報" || post.attributes.includes("アップデート")
+  }
+];
+
 const ALL_CHARACTER_NAMES = new Set(
   CHARACTER_GROUPS.flatMap((group) => group.values.map((item) => item.value))
 );
@@ -63,7 +100,9 @@ for (const group of CHARACTER_GROUPS) {
 
 const state = {
   posts: [],
+  period: "all",
   character: "すべて",
+  topic: "すべて",
   attribute: "すべて",
   category: "すべて",
   query: "",
@@ -79,6 +118,8 @@ async function init() {
     posts: document.querySelector("#posts"),
     empty: document.querySelector("#emptyState"),
     error: document.querySelector("#errorState"),
+    characterGrid: document.querySelector("#characterGrid"),
+    topicGrid: document.querySelector("#topicGrid"),
     character: document.querySelector("#characterSelect"),
     attribute: document.querySelector("#attributeSelect"),
     category: document.querySelector("#categorySelect"),
@@ -90,7 +131,8 @@ async function init() {
     updated: document.querySelector("#updatedDate"),
     sampleNotice: document.querySelector("#sampleNotice"),
     theme: document.querySelector("#themeToggle"),
-    route: document.querySelector("#selectedRouteText")
+    route: document.querySelector("#selectedRouteText"),
+    periodDescription: document.querySelector("#periodDescription")
   });
 
   populateCharacterSelect();
@@ -108,6 +150,7 @@ async function init() {
     state.posts = deduplicate(data).map(normalizePost).filter(isValidPost);
     appendDataOnlyAttributes();
     updateStats();
+    updatePeriodCounts();
     render();
   } catch (error) {
     console.error("攻略情報の読み込みに失敗しました:", error);
@@ -165,8 +208,17 @@ function appendDataOnlyAttributes() {
 }
 
 function bindControls() {
+  document.querySelector("#periodTabs").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-period]");
+    if (!button || !PERIODS[button.dataset.period]) return;
+    state.period = button.dataset.period;
+    updatePeriodButtons();
+    render();
+  });
+
   elements.character.addEventListener("change", (event) => {
     state.character = event.target.value;
+    state.topic = "すべて";
     render();
   });
   elements.attribute.addEventListener("change", (event) => {
@@ -183,7 +235,7 @@ function bindControls() {
   });
   elements.sort.addEventListener("change", (event) => {
     state.sort = event.target.value;
-    render();
+    renderResults();
   });
 
   document.querySelector("#resetFilters").addEventListener("click", resetFilters);
@@ -192,7 +244,9 @@ function bindControls() {
 
 function resetFilters() {
   Object.assign(state, {
+    period: "all",
     character: "すべて",
+    topic: "すべて",
     attribute: "すべて",
     category: "すべて",
     query: "",
@@ -204,7 +258,24 @@ function resetFilters() {
   elements.category.value = "すべて";
   elements.search.value = "";
   elements.sort.value = "newest";
+  updatePeriodButtons();
   render();
+}
+
+function selectCharacter(character) {
+  state.character = character;
+  state.topic = "すべて";
+  elements.character.value = character;
+  render();
+  document.querySelector("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function selectTopic(topicId) {
+  state.topic = topicId;
+  state.character = "すべて";
+  elements.character.value = "すべて";
+  render();
+  document.querySelector("#results").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function deduplicate(posts) {
@@ -276,22 +347,56 @@ function isValidPost(post) {
   return Boolean(post.id && post.title && post.summary && post.sourceUrl && Array.isArray(post.attributes));
 }
 
+function containsAny(post, terms) {
+  const haystack = [post.title, post.summary, post.category, ...post.attributes]
+    .join(" ")
+    .toLocaleLowerCase("ja");
+  return terms.some((term) => haystack.includes(term.toLocaleLowerCase("ja")));
+}
+
+function getReferenceTimestamp(post) {
+  return safeDate(post.postedAt) || safeDate(post.registeredAt);
+}
+
+function periodMatches(post, periodKey = state.period) {
+  if (periodKey === "all") return true;
+  const timestamp = getReferenceTimestamp(post);
+  if (!timestamp) return false;
+  const elapsed = Date.now() - timestamp;
+  return elapsed >= 0 && elapsed <= PERIODS[periodKey].duration;
+}
+
+function getPeriodPosts(periodKey = state.period) {
+  return state.posts.filter((post) => periodMatches(post, periodKey));
+}
+
+function topicMatches(post, topicId) {
+  if (topicId === "すべて") return true;
+  return TOPIC_DEFINITIONS.find((topic) => topic.id === topicId)?.matches(post) || false;
+}
+
 function getFilteredPosts() {
   const filtered = state.posts.filter((post) => {
+    const periodMatch = periodMatches(post);
     const characterMatch = state.character === "すべて" || post.character === state.character;
+    const topicMatch = topicMatches(post, state.topic);
     const attributeMatch = state.attribute === "すべて" || post.attributes.includes(state.attribute);
     const categoryMatch = categoryMatches(post, state.category);
     const text = [
       post.title, post.summary, post.character, post.category, post.author, ...post.attributes
     ].join(" ").toLocaleLowerCase("ja");
     const queryMatch = !state.query || text.includes(state.query);
-    return characterMatch && attributeMatch && categoryMatch && queryMatch;
+    return periodMatch && characterMatch && topicMatch && attributeMatch && categoryMatch && queryMatch;
   });
 
-  return filtered.sort((a, b) => {
-    if (state.sort === "postedNewest") return safeDate(b.postedAt) - safeDate(a.postedAt);
-    if (state.sort === "useful") return b.usefulness - a.usefulness;
-    if (state.sort === "oldest") return safeDate(a.registeredAt) - safeDate(b.registeredAt);
+  return sortPosts(filtered, state.sort);
+}
+
+function sortPosts(posts, sort = "newest") {
+  return [...posts].sort((a, b) => {
+    if (sort === "postedNewest") return safeDate(b.postedAt) - safeDate(a.postedAt);
+    if (sort === "useful") return b.usefulness - a.usefulness;
+    if (sort === "oldest") return safeDate(a.registeredAt) - safeDate(b.registeredAt);
     return safeDate(b.registeredAt) - safeDate(a.registeredAt);
   });
 }
@@ -305,6 +410,90 @@ function categoryMatches(post, selectedCategory) {
 }
 
 function render() {
+  renderDirectories();
+  renderResults();
+  renderActiveFilters();
+}
+
+function renderDirectories() {
+  const periodPosts = sortPosts(getPeriodPosts(), "newest");
+  elements.characterGrid.replaceChildren(
+    ...DIRECTORY_CHARACTERS.map((character) => createCharacterDirectoryCard(character, periodPosts))
+  );
+  elements.topicGrid.replaceChildren(
+    ...TOPIC_DEFINITIONS.map((topic) => createTopicDirectoryCard(topic, periodPosts))
+  );
+}
+
+function createCharacterDirectoryCard(character, periodPosts) {
+  const posts = periodPosts.filter((post) => post.character === character.value);
+  const article = document.createElement("article");
+  article.className = `directory-card${state.character === character.value ? " is-active" : ""}`;
+
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "directory-card-head";
+  header.addEventListener("click", () => selectCharacter(character.value));
+  header.innerHTML = `
+    <span><small>${escapeHtml(character.group)}</small><strong>${escapeHtml(character.value)}</strong></span>
+    <b>${posts.length}<small>件</small></b>
+  `;
+
+  article.append(header, createDirectoryTitleList(posts));
+  return article;
+}
+
+function createTopicDirectoryCard(topic, periodPosts) {
+  const posts = periodPosts.filter(topic.matches);
+  const article = document.createElement("article");
+  article.className = `topic-card${state.topic === topic.id ? " is-active" : ""}`;
+
+  const header = document.createElement("button");
+  header.type = "button";
+  header.className = "topic-card-head";
+  header.addEventListener("click", () => selectTopic(topic.id));
+  header.innerHTML = `
+    <span><small>${escapeHtml(topic.subtitle)}</small><strong>${escapeHtml(topic.title)}</strong></span>
+    <b>${posts.length}<small>件</small></b>
+  `;
+
+  article.append(header, createDirectoryTitleList(posts, 4));
+  return article;
+}
+
+function createDirectoryTitleList(posts, limit = 3) {
+  const wrap = document.createElement("div");
+  wrap.className = "directory-titles";
+
+  if (!posts.length) {
+    wrap.innerHTML = '<p class="directory-empty">情報はまだありません</p>';
+    return wrap;
+  }
+
+  const list = document.createElement("ul");
+  for (const post of posts.slice(0, limit)) {
+    const item = document.createElement("li");
+    const link = document.createElement("a");
+    link.href = post.sourceUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.title = `${post.title} — Xの投稿を開く`;
+    link.innerHTML = `<span>${escapeHtml(post.title)}</span><small aria-hidden="true">↗</small>`;
+    item.append(link);
+    list.append(item);
+  }
+  wrap.append(list);
+
+  if (posts.length > limit) {
+    const more = document.createElement("p");
+    more.className = "directory-more";
+    more.textContent = `ほか ${posts.length - limit}件`;
+    wrap.append(more);
+  }
+  return wrap;
+}
+
+function renderResults() {
   const posts = getFilteredPosts();
   elements.posts.replaceChildren(...posts.map(createCard));
   elements.posts.setAttribute("aria-busy", "false");
@@ -312,16 +501,18 @@ function render() {
   elements.error.hidden = true;
   elements.count.textContent = `${posts.length}件`;
   elements.sampleNotice.hidden = !posts.some((post) => post.isSample);
-  renderActiveFilters();
 }
 
 function renderActiveFilters() {
-  const labels = [];
+  const labels = [PERIODS[state.period].label];
   if (state.character !== "すべて") labels.push(state.character);
+  if (state.topic !== "すべて") {
+    labels.push(TOPIC_DEFINITIONS.find((topic) => topic.id === state.topic)?.title || state.topic);
+  }
   if (state.attribute !== "すべて") labels.push(state.attribute);
   if (state.category !== "すべて") labels.push(state.category);
   if (state.query) labels.push(`「${state.query}」`);
-  elements.route.textContent = labels.length ? labels.join(" / ") : "すべての攻略情報";
+  elements.route.textContent = labels.join(" / ");
 }
 
 function createCard(post) {
@@ -385,6 +576,27 @@ function updateStats() {
     return safeDate(post.registeredAt) > safeDate(current) ? post.registeredAt : current;
   }, "");
   elements.updated.textContent = latest ? formatDate(latest, false) : "—";
+}
+
+function updatePeriodCounts() {
+  const countIds = {
+    all: "#periodCountAll",
+    day: "#periodCountDay",
+    week: "#periodCountWeek",
+    month: "#periodCountMonth"
+  };
+  for (const [period, selector] of Object.entries(countIds)) {
+    document.querySelector(selector).textContent = `${getPeriodPosts(period).length}件`;
+  }
+}
+
+function updatePeriodButtons() {
+  for (const button of document.querySelectorAll("[data-period]")) {
+    const active = button.dataset.period === state.period;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
+  }
+  elements.periodDescription.textContent = `${PERIODS[state.period].label}の情報を表示中`;
 }
 
 function safeDate(value) {
