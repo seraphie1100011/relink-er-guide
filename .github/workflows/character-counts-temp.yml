@@ -1,4 +1,4 @@
-name: Character counts temp
+name: Fill character minimum three
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  count:
+  fill:
     if: github.head_ref == 'fill-character-minimum-three-20260802'
     runs-on: ubuntu-latest
     steps:
@@ -17,7 +17,8 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
-      - name: Count character posts
+
+      - name: Append and validate posts
         run: |
           python - <<'PY'
           import json
@@ -27,31 +28,65 @@ jobs:
           chars = [
             'カタリナ','ラカム','イオ','オイゲン','ロゼッタ','ランスロット','ヴェイン','パーシヴァル','ジークフリート','シャルロッテ','ヨダルラーハ','ナルメア','ゼタ','バザラガ','フェリ','ガンダゴウザ','カリオストロ','イド','シエテ','ソーン','サンダルフォン','ベアトリクス','ユーステス','ガランツァ','マギラフリラ','フラウ','フェディエル'
           ]
-          posts = json.loads(Path('data/posts.json').read_text(encoding='utf-8'))
-          counts = Counter()
-          titles = {c: [] for c in chars}
+          data_path = Path('data/posts.json')
+          additions_path = Path('tmp/new-character-posts.json')
+          posts = json.loads(data_path.read_text(encoding='utf-8'))
+          additions = json.loads(additions_path.read_text(encoding='utf-8'))
+          assert isinstance(posts, list) and isinstance(additions, list)
+          assert len(additions) == 57, f'expected 57 additions, got {len(additions)}'
+
+          ids = {str(p.get('id','')).strip() for p in posts}
+          urls = {str(p.get('sourceUrl','')).strip() for p in posts}
+          appended = 0
+          for post in additions:
+            required = ['id','title','summary','character','category','attributes','sourceUrl','registeredAt']
+            missing = [key for key in required if not post.get(key)]
+            assert not missing, f'missing {missing}: {post.get("id")}'
+            assert post['character'] in chars, post['character']
+            assert isinstance(post['attributes'], list) and post['attributes']
+            assert post['sourceUrl'].startswith('https://x.com/'), post['sourceUrl']
+            if post['id'] in ids or post['sourceUrl'] in urls:
+              continue
+            posts.append(post)
+            ids.add(post['id'])
+            urls.add(post['sourceUrl'])
+            appended += 1
+
+          count = Counter()
           for post in posts:
             raw = str(post.get('character') or '').strip()
             cat = str(post.get('category') or '').strip()
             char = raw if raw in chars else cat if cat in chars else ''
             if char:
-              counts[char] += 1
-              titles[char].append(post.get('title',''))
-          out = {
+              count[char] += 1
+
+          below = {char: count[char] for char in chars if count[char] < 3}
+          assert not below, f'characters below 3: {below}'
+          assert len({p['id'] for p in posts}) == len(posts), 'duplicate ids'
+          assert len({p['sourceUrl'] for p in posts}) == len(posts), 'duplicate source urls'
+
+          data_path.write_text(json.dumps(posts, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          report = {
             'totalPosts': len(posts),
-            'counts': {c: counts[c] for c in chars},
-            'missingToThree': {c: max(0, 3-counts[c]) for c in chars if counts[c] < 3},
-            'titles': titles
+            'newPostsPrepared': len(additions),
+            'newPostsAppendedThisRun': appended,
+            'allCharactersAtLeastThree': True,
+            'counts': {char: count[char] for char in chars}
           }
-          Path('tmp').mkdir(exist_ok=True)
-          Path('tmp/character-counts.json').write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding='utf-8')
+          Path('tmp/final-character-counts.json').write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(report, ensure_ascii=False, indent=2))
           PY
-      - name: Commit report
+
+      - name: Commit generated data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmp/character-counts.json
-          if ! git diff --cached --quiet; then
-            git commit -m "キャラクター別掲載件数を集計"
+          git add data/posts.json tmp/final-character-counts.json
+          if git diff --cached --quiet; then
+            echo "No generated changes"
+          else
+            git commit -m "全27キャラクターを最低3件へ補完"
             git push origin HEAD:${{ github.head_ref }}
           fi
