@@ -3,49 +3,101 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="グランブルーファンタジー リリンク エンドレスラグナロクの攻略情報を、キャラクターや内容から探せる非公式ガイドです。">
+  <meta name="description" content="グランブルーファンタジー リリンク エンドレスラグナロクのキャラクター別攻略情報を探せる非公式アーカイブです。">
   <meta name="color-scheme" content="light dark">
-  <title>リリンクER攻略ログ</title>
+  <title>リリンクER キャラクター攻略アーカイブ</title>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#posts">攻略情報へスキップ</a>
+  <a class="skip-link" href="#results">攻略情報へスキップ</a>
 
   <header class="site-header">
     <div class="header-inner">
-      <a class="brand" href="./" aria-label="リリンクER攻略ログ トップ">
-        <span class="brand-mark" aria-hidden="true">ER</span>
-        <span>
-          <strong>リリンクER攻略ログ</strong>
-          <small>非公式・元投稿リンク集</small>
+      <a class="brand" href="./" aria-label="リリンクER キャラクター攻略アーカイブ トップ">
+        <span class="brand-emblem" aria-hidden="true"><span>ER</span></span>
+        <span class="brand-copy">
+          <strong>RELINK ER ARCHIVE</strong>
+          <small>キャラクター攻略・非公式リンク集</small>
         </span>
       </a>
-      <button id="themeToggle" class="icon-button" type="button" aria-label="ダークモードに切り替え" title="表示テーマを切り替え">
+      <nav class="header-nav" aria-label="ページ内ナビゲーション">
+        <a href="#characters">キャラクター</a>
+        <a href="#topics">その他</a>
+        <a href="#results">掲載一覧</a>
+      </nav>
+      <button id="themeToggle" class="theme-button" type="button" aria-label="ダークモードに切り替え" title="表示テーマを切り替え">
         <span aria-hidden="true">☾</span>
       </button>
     </div>
   </header>
 
   <main>
-    <section class="intro" aria-labelledby="pageTitle">
-      <div>
-        <p class="eyebrow">GRANBLUE FANTASY: RELINK / ENDLESS RAGNAROK</p>
-        <h1 id="pageTitle">必要な攻略情報を、すぐ探す。</h1>
-        <p class="intro-copy">Xなどに投稿された攻略情報を、短い要約と元投稿へのリンクで整理しています。</p>
+    <section class="hero" aria-labelledby="pageTitle">
+      <div class="hero-copy">
+        <p class="eyebrow">GRANBLUE FANTASY: RELINK — ENDLESS RAGNAROK</p>
+        <h1 id="pageTitle">キャラクターから、<br>知りたい攻略へ。</h1>
+        <p>Xに投稿された装備、立ち回り、検証、豆知識を、キャラクター別に整理しています。</p>
       </div>
       <dl class="stats" aria-label="掲載状況">
-        <div><dt>掲載</dt><dd id="totalCount">—</dd></div>
+        <div><dt>掲載情報</dt><dd id="totalCount">—</dd></div>
         <div><dt>確認済み</dt><dd id="verifiedCount">—</dd></div>
-        <div><dt>最終追加</dt><dd id="updatedDate">—</dd></div>
+        <div><dt>最終更新日</dt><dd id="updatedDate">—</dd></div>
       </dl>
+    </section>
+
+    <section class="period-panel" aria-labelledby="periodTitle">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-kicker">RECENT ARCHIVE</p>
+          <h2 id="periodTitle">掲載期間を切り替える</h2>
+        </div>
+        <p id="periodDescription">全期間の情報を表示中</p>
+      </div>
+      <div id="periodTabs" class="period-tabs" role="group" aria-label="掲載期間">
+        <button type="button" class="period-tab is-active" data-period="all" aria-pressed="true">
+          <span>すべて</span><strong id="periodCountAll">—</strong>
+        </button>
+        <button type="button" class="period-tab" data-period="day" aria-pressed="false">
+          <span>過去1日</span><strong id="periodCountDay">—</strong>
+        </button>
+        <button type="button" class="period-tab" data-period="week" aria-pressed="false">
+          <span>過去1週間</span><strong id="periodCountWeek">—</strong>
+        </button>
+        <button type="button" class="period-tab" data-period="month" aria-pressed="false">
+          <span>過去1ヶ月</span><strong id="periodCountMonth">—</strong>
+        </button>
+      </div>
+      <p class="period-note">投稿日時を基準に集計し、投稿日時が不明な情報はサイト登録日時を使用します。</p>
+    </section>
+
+    <section id="characters" class="directory-section" aria-labelledby="charactersTitle">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">CHARACTER DIRECTORY</p>
+          <h2 id="charactersTitle">キャラクターから探す</h2>
+        </div>
+        <p>27キャラクターの枠を常設しています。見出しを押すと掲載一覧を絞り込めます。</p>
+      </div>
+      <div id="characterGrid" class="character-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="topics" class="directory-section" aria-labelledby="topicsTitle">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">OTHER GUIDES</p>
+          <h2 id="topicsTitle">その他の攻略情報</h2>
+        </div>
+        <p>キャラクターをまたいで役立つ情報を、3つの枠に整理しています。</p>
+      </div>
+      <div id="topicGrid" class="topic-grid" aria-live="polite"></div>
     </section>
 
     <section class="finder" aria-labelledby="finderTitle">
       <div class="finder-heading">
         <div>
-          <h2 id="finderTitle">攻略情報を検索</h2>
-          <p>まずキャラクターかキーワードを選び、必要なときだけ詳しく絞り込めます。</p>
+          <p class="section-kicker">SEARCH & FILTER</p>
+          <h2 id="finderTitle">掲載情報をさらに絞り込む</h2>
         </div>
         <button id="resetFilters" class="reset-button" type="button">条件をリセット</button>
       </div>
@@ -53,44 +105,35 @@
       <label class="search-box" for="searchInput">
         <span aria-hidden="true">⌕</span>
         <span class="sr-only">キーワード検索</span>
-        <input id="searchInput" type="search" placeholder="例：サンダルフォン、ダメージ上限、ルシファー" autocomplete="off">
+        <input id="searchInput" type="search" placeholder="例：ダメージ上限、フルアシスト、マスタースキル" autocomplete="off">
       </label>
 
-      <div class="primary-filter">
+      <div class="filter-grid">
         <label class="field" for="characterSelect">
           <span>キャラクター</span>
           <select id="characterSelect"></select>
         </label>
+        <label class="field" for="categorySelect">
+          <span>大分類</span>
+          <select id="categorySelect"></select>
+        </label>
+        <label class="field" for="attributeSelect">
+          <span>補助属性</span>
+          <select id="attributeSelect"></select>
+        </label>
       </div>
 
-      <details class="advanced-filters">
-        <summary>
-          <span>さらに絞り込む</span>
-          <small>補助属性・大分類</small>
-        </summary>
-        <div class="advanced-grid">
-          <label class="field" for="attributeSelect">
-            <span>補助属性</span>
-            <select id="attributeSelect"></select>
-          </label>
-          <label class="field" for="categorySelect">
-            <span>大分類</span>
-            <select id="categorySelect"></select>
-          </label>
-        </div>
-      </details>
-
       <div class="active-filters" aria-live="polite">
-        <span class="active-label">表示条件</span>
-        <span id="selectedRouteText">すべての攻略情報</span>
+        <span>表示条件</span>
+        <strong id="selectedRouteText">すべての攻略情報</strong>
       </div>
     </section>
 
-    <section class="results" aria-labelledby="resultsTitle">
+    <section id="results" class="results" aria-labelledby="resultsTitle">
       <div class="results-heading">
         <div>
-          <h2 id="resultsTitle">攻略情報</h2>
-          <span id="resultCount" class="result-count" aria-live="polite"></span>
+          <p class="section-kicker">POST ARCHIVE</p>
+          <h2 id="resultsTitle">掲載一覧 <span id="resultCount" aria-live="polite"></span></h2>
         </div>
         <label class="sort-field" for="sortSelect">
           <span class="sr-only">並び順</span>
@@ -103,15 +146,12 @@
         </label>
       </div>
 
-      <div id="sampleNotice" class="notice" hidden>
-        表示確認用の架空サンプルが含まれています。
-      </div>
-
+      <div id="sampleNotice" class="notice" hidden>表示確認用の架空サンプルが含まれています。</div>
       <div id="posts" class="post-grid" aria-live="polite" aria-busy="true"></div>
 
       <div id="emptyState" class="empty-state" hidden>
         <h3>条件に合う情報がありません</h3>
-        <p>検索語や絞り込み条件を変更してください。</p>
+        <p>期間やキャラクター、検索条件を変更してください。</p>
         <button id="emptyResetButton" type="button">すべて表示する</button>
       </div>
 
@@ -123,7 +163,7 @@
   </main>
 
   <footer>
-    <p><strong>リリンクER攻略ログ</strong><br><small>UNOFFICIAL COMMUNITY ARCHIVE</small></p>
+    <p><strong>RELINK ER ARCHIVE</strong><br><small>UNOFFICIAL COMMUNITY GUIDE</small></p>
     <p>投稿内容は独自に要約しています。詳細と最新状況は必ず元投稿をご確認ください。</p>
   </footer>
 </body>
