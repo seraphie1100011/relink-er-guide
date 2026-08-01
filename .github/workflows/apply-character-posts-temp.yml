@@ -1,0 +1,301 @@
+name: Apply character-focused X posts
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'add-character-posts-20260802' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout head branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Add character posts
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          registered_at = "2026-08-02T01:35:00+09:00"
+          new_posts = [
+            {
+              "id": "x-2082500737305874772",
+              "title": "サンダルフォンの普段使い構成で約4億",
+              "summary": "サンダルフォンの普段使いを意識した構成で約4億ダメージに到達した装備・計測例です。投稿画像から結果を確認できますが、計測時間、攻撃手順、ジーン・召喚石の各数値は追加確認が必要です。",
+              "character": "サンダルフォン",
+              "category": "キャラクター攻略",
+              "attributes": ["火力", "DPS", "装備", "ジーン", "召喚石", "検証"],
+              "sourceUrl": "https://x.com/shiro_bo3/status/2082500737305874772",
+              "author": "@shiro_bo3",
+              "postedAt": "2026-07-30T01:17:21+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 89,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2082496357391307204",
+              "title": "フェディエルで『鈍色の残響』を約1分周回し究竟の証13個",
+              "summary": "フェディエルを使い、『鈍色の残響』を1周約1分で周回して究竟の証13個を集めたという実践例です。周回速度と成果が具体的ですが、集計周回数、ドロップ補正、パーティ構成は追加確認が必要です。",
+              "character": "フェディエル",
+              "category": "素材・周回",
+              "attributes": ["周回", "素材集め", "究竟の証", "高難度", "装備"],
+              "sourceUrl": "https://x.com/kiryutan0829/status/2082496357391307204",
+              "author": "@kiryutan0829",
+              "postedAt": "2026-07-30T00:59:57+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 92,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2082466179520573512",
+              "title": "無二無三ナルメアで天元MVP、回避と神楽で張り付き",
+              "summary": "無二無三型ナルメアで天元戦のMVPを取った運用例です。回避と神楽を使って攻撃を継続し、水縹舞で耐久を補う立ち回りが紹介されています。装備画像と実戦結果を確認できますが、完全な入力手順は追加確認が必要です。",
+              "character": "ナルメア",
+              "category": "キャラクター攻略",
+              "attributes": ["無二無三", "回避", "神楽", "水縹舞", "ボス攻略", "装備"],
+              "sourceUrl": "https://x.com/Captain7be/status/2082466179520573512",
+              "author": "@Captain7be",
+              "postedAt": "2026-07-29T23:00:02+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 95,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2082449106275110997",
+              "title": "フェディエルの生存・火力バランス汎用構成",
+              "summary": "フェディエルを幅広いクエストで使うため、生存力と火力を両立した汎用装備例です。さらに火力を伸ばす場合は、生存系の枠を天星の界・天星の雪などへ入れ替える調整案も示されています。",
+              "character": "フェディエル",
+              "category": "キャラクター攻略",
+              "attributes": ["装備", "ジーン", "火力", "生存", "天星", "汎用構成"],
+              "sourceUrl": "https://x.com/fubuki_7_/status/2082449106275110997",
+              "author": "@fubuki_7_",
+              "postedAt": "2026-07-29T21:52:11+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 94,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2082418646547362189",
+              "title": "イオの魔法チェインビルドで60秒4.9億",
+              "summary": "イオの魔法チェイン型で60秒約4.9億を記録したビルドです。紙一重なしでHP約9万を確保し、HP枠を金剛へ変更するとHP約14万の耐久寄りにも調整できると説明されています。",
+              "character": "イオ",
+              "category": "キャラクター攻略",
+              "attributes": ["魔法チェイン", "火力", "DPS", "トライアル", "紙一重なし", "装備"],
+              "sourceUrl": "https://x.com/ijFChnVbQQ8EjNB/status/2082418646547362189",
+              "author": "@ijFChnVbQQ8EjNB",
+              "postedAt": "2026-07-29T19:51:09+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 98,
+              "confidence": "高",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2082410029601407460",
+              "title": "ナルメアが源氏居合中に被ダメージ100％カット",
+              "summary": "ナルメアの源氏居合中に被ダメージを100％カットできる条件を調べた検証です。マスタースキルの防御効果、蝶の数、サポート効果、装備スキルを組み合わせた条件が画像で示されています。常時成立するかは追加検証が必要です。",
+              "character": "ナルメア",
+              "category": "システム・検証",
+              "attributes": ["源氏居合", "ダメージカット", "防御", "マスタースキル", "検証", "装備"],
+              "sourceUrl": "https://x.com/LiptonDDD/status/2082410029601407460",
+              "author": "@LiptonDDD",
+              "postedAt": "2026-07-29T19:16:55+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 98,
+              "confidence": "高",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2078462140281966886",
+              "title": "マスタースタイルの構え切替強化でナルメアの操作性が改善",
+              "summary": "マスタースタイルによる構え切替の強化で、ナルメアの操作感とコンボ継続が大きく改善したという使用例です。以前の操作で扱いにくさを感じていた場合の育成候補になりますが、具体的な倍率は未確認です。",
+              "character": "ナルメア",
+              "category": "マスタースキル",
+              "attributes": ["マスタースタイル", "構え切替", "コンボ", "操作性", "豆知識"],
+              "sourceUrl": "https://x.com/aco_gamesphoto/status/2078462140281966886",
+              "author": "@aco_gamesphoto",
+              "postedAt": "2026-07-18T21:49:24+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 84,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2078476788544729335",
+              "title": "無二無三ナルメアの累積防御50％＋防御15％デバフ",
+              "summary": "無二無三型ナルメアでは、累積防御DOWN50％と通常の防御DOWN15％を組み合わせられ、自身のダメージを維持しながら敵の防御を下げられるという仕様解説です。防御デバフが上限後の実ダメージにも寄与するとの説明があります。",
+              "character": "ナルメア",
+              "category": "キャラクター攻略",
+              "attributes": ["無二無三", "防御DOWN", "弱体", "火力", "仕様", "豆知識"],
+              "sourceUrl": "https://x.com/q_yuiyui_p/status/2078476788544729335",
+              "author": "@q_yuiyui_p",
+              "postedAt": "2026-07-18T22:47:37+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 94,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "none"
+            },
+            {
+              "id": "x-2078459644822032741",
+              "title": "フラジャイルドッジ＋無二無三型ナルメア",
+              "summary": "フラジャイルドッジによる回避性能と無二無三の攻撃性能を組み合わせたナルメア構成です。高難度で攻撃を継続しやすい実戦型の方向性として紹介されていますが、装備一式とDPS比較は追加確認が必要です。",
+              "character": "ナルメア",
+              "category": "キャラクター攻略",
+              "attributes": ["フラジャイルドッジ", "無二無三", "回避", "火力", "高難度", "装備"],
+              "sourceUrl": "https://x.com/satoshin3104/status/2078459644822032741",
+              "author": "@satoshin3104",
+              "postedAt": "2026-07-18T21:39:29+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 86,
+              "confidence": "低",
+              "status": "未確認",
+              "media": "none"
+            },
+            {
+              "id": "x-2078435009481044032",
+              "title": "累積防御型ナルメアがインフィニティで約3億",
+              "summary": "累積防御DOWNを活用するナルメアで、インフィニティ難易度でもボタン連打中心に約3億ダメージを出せたという実戦例です。操作難度を抑えた構成候補ですが、計測時間と装備詳細の確認が必要です。",
+              "character": "ナルメア",
+              "category": "キャラクター攻略",
+              "attributes": ["累積防御DOWN", "火力", "高難度", "DPS", "簡単操作", "装備"],
+              "sourceUrl": "https://x.com/gaming_miuru/status/2078435009481044032",
+              "author": "@gaming_miuru",
+              "postedAt": "2026-07-18T20:01:36+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 88,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2078439634762354781",
+              "title": "ナルメアの更新版装備構成",
+              "summary": "ナルメアの装備を更新した時点のビルド画像です。ジーンや各種スキルの配分を比較でき、投稿者は召喚石にさらに更新余地があるとしています。完成形ではなく育成途中の比較資料として扱います。",
+              "character": "ナルメア",
+              "category": "キャラクター攻略",
+              "attributes": ["装備", "ジーン", "召喚石", "ビルド", "育成", "画像"],
+              "sourceUrl": "https://x.com/basasan_pn/status/2078439634762354781",
+              "author": "@basasan_pn",
+              "postedAt": "2026-07-18T20:19:59+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 82,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2081738569174200684",
+              "title": "天系ジーンを積んだNPC専用パーシヴァル構成",
+              "summary": "CPU操作を前提に、天系ジーンを複数採用したパーシヴァルのNPC専用ビルドです。投稿者は実戦で非常に強いと評価しており、装備画像から構成を比較できます。クエスト別の安定性は追加確認が必要です。",
+              "character": "パーシヴァル",
+              "category": "CPU・放置",
+              "attributes": ["CPU", "NPC", "天星", "ジーン", "装備", "火力"],
+              "sourceUrl": "https://x.com/KamuiTakegami/status/2081738569174200684",
+              "author": "@KamuiTakegami",
+              "postedAt": "2026-07-27T22:48:46+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 93,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2079966599398994370",
+              "title": "パーシヴァルのフルアシストで約5.4億",
+              "summary": "パーシヴァルをフルアシストで運用し、最初の移動だけ手動操作して約5.4億ダメージを記録した例です。放置寄り運用の火力目安になりますが、計測条件と装備各枠は追加確認が必要です。",
+              "character": "パーシヴァル",
+              "category": "CPU・放置",
+              "attributes": ["フルアシスト", "放置", "火力", "DPS", "トライアル", "装備"],
+              "sourceUrl": "https://x.com/blave12345/status/2079966599398994370",
+              "author": "@blave12345",
+              "postedAt": "2026-07-23T01:27:35+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 94,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2078171449744040180",
+              "title": "パーシヴァルの普段使い瞬間火力ビルド",
+              "summary": "普段のクエストで使いやすさを保ちながら、非常に高い瞬間火力を狙うパーシヴァル構成です。装備画像があり、実戦向けビルドの比較材料になりますが、具体的なコンボと最大ダメージ条件は追加確認が必要です。",
+              "character": "パーシヴァル",
+              "category": "キャラクター攻略",
+              "attributes": ["装備", "瞬間火力", "普段使い", "ジーン", "コンボ", "ビルド"],
+              "sourceUrl": "https://x.com/toshi3418/status/2078171449744040180",
+              "author": "@toshi3418",
+              "postedAt": "2026-07-18T02:34:18+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 87,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            },
+            {
+              "id": "x-2077401531633295428",
+              "title": "パーシヴァルが60秒7億",
+              "summary": "パーシヴァルの60秒トライアルで約7億ダメージを記録した高火力例です。画像から計測結果を確認できますが、使用した武器、ジーン、召喚石、マスタースキル、入力手順は追加確認が必要です。",
+              "character": "パーシヴァル",
+              "category": "キャラクター攻略",
+              "attributes": ["火力", "DPS", "トライアル", "装備", "コンボ", "検証"],
+              "sourceUrl": "https://x.com/hohoFF14/status/2077401531633295428",
+              "author": "@hohoFF14",
+              "postedAt": "2026-07-15T23:34:56+09:00",
+              "registeredAt": registered_at,
+              "usefulness": 97,
+              "confidence": "中",
+              "status": "要追加検証",
+              "media": "image"
+            }
+          ]
+
+          path = Path("data/posts.json")
+          posts = json.loads(path.read_text(encoding="utf-8"))
+          seen_ids = {str(post.get("id", "")) for post in posts}
+          seen_urls = {str(post.get("sourceUrl", "")) for post in posts}
+          added = 0
+          for post in new_posts:
+              if post["id"] in seen_ids or post["sourceUrl"] in seen_urls:
+                  continue
+              posts.append(post)
+              seen_ids.add(post["id"])
+              seen_urls.add(post["sourceUrl"])
+              added += 1
+          path.write_text(json.dumps(posts, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(f"Added {added} posts; total {len(posts)}")
+          PY
+
+      - name: Validate JSON
+        run: python -m json.tool data/posts.json >/dev/null
+
+      - name: Commit generated changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add data/posts.json
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "キャラクター別の有用なX投稿を追加"
+            git push origin HEAD:${{ github.head_ref }}
+          fi
