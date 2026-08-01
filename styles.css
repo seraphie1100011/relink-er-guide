@@ -665,3 +665,31 @@ footer > p:last-child { text-align: right; }
 .directory-card .directory-empty {
   margin: 8px 0 10px;
 }
+
+
+/* Dark mode contrast correction */
+[data-theme="dark"] .period-tab.is-active,
+[data-theme="dark"] .topic-card-head,
+[data-theme="dark"] .source-button {
+  background: linear-gradient(105deg, #0b2940, #165176);
+  color: #f7fbff;
+}
+
+[data-theme="dark"] .period-tab.is-active strong,
+[data-theme="dark"] .topic-card-head strong,
+[data-theme="dark"] .topic-card-head small,
+[data-theme="dark"] .topic-card-head b,
+[data-theme="dark"] .topic-card-head b small,
+[data-theme="dark"] .source-button {
+  color: #f7fbff;
+}
+
+[data-theme="dark"] .period-tab.is-active,
+[data-theme="dark"] .topic-card-head {
+  border-color: #397da7;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .5);
+}
+
+[data-theme="dark"] .source-button:hover {
+  filter: brightness(1.18);
+}
