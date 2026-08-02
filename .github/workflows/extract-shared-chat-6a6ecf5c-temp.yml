@@ -1,4 +1,4 @@
-name: Extract shared chat 6a6ecf5c
+name: Import shared chat 6a6ecf5c
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  extract:
+  import:
     if: github.head_ref == 'import-shared-chat-6a6ecf5c'
     runs-on: ubuntu-latest
     steps:
@@ -19,30 +19,217 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Prepare extractor
+      - name: Apply extracted information
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install requests
-          git clone --depth 1 https://github.com/vl3c/ChatPeek.git /tmp/ChatPeek
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from urllib.parse import quote
 
-      - name: Extract shared conversation
-        run: |
-          rm -rf tmp/shared-chat-6a6ecf5c
-          mkdir -p tmp/shared-chat-6a6ecf5c
-          python /tmp/ChatPeek/ChatPeek.py \
-            'https://chatgpt.com/share/6a6ecf5c-bbe4-83ee-a245-fbfc60296f2e' \
-            --output tmp/shared-chat-6a6ecf5c \
-            --skip-assets
-          find tmp/shared-chat-6a6ecf5c -type f -maxdepth 2 -print
+          path = Path('data/posts.json')
+          posts = json.loads(path.read_text(encoding='utf-8'))
+          before = len(posts)
+          registered_at = '2026-08-02T14:10:00+09:00'
 
-      - name: Commit extraction
+          def x_search(query):
+              return 'https://x.com/search?q=' + quote(query, safe='') + '&f=live'
+
+          replacements = {
+              'x-search-fill-charlotta-invincibility-loop-20260802': {
+                  'id': 'x-search-fill-charlotta-invincibility-loop-20260802',
+                  'title': '無敵スタイルは約19秒継続し、約3秒の隙で再使用可能',
+                  'summary': 'マスターランク30のシャルロッテで、無敵アビリティの基本16秒にアビリティ3回分の延長3秒を加え、合計約19秒の無敵時間を確保する運用です。無敵中に攻撃を当て続けると約22秒で再使用可能となり、理論上は無敵終了後およそ3秒で再び無敵へ移行できます。投稿者の構成はクイックアビリティ45、怒涛16です。',
+                  'character': 'シャルロッテ',
+                  'category': 'キャラクター攻略',
+                  'attributes': ['マスタースキル', '無敵', 'クイックアビリティ', '怒涛', 'アビリティ回転', '高難度'],
+                  'sourceUrl': 'https://x.com/age_vocalo1226/status/2077327876840698227',
+                  'author': '@age_vocalo1226',
+                  'postedAt': '2026-07-15T18:42:15+09:00',
+                  'registeredAt': registered_at,
+                  'usefulness': 97,
+                  'confidence': '高',
+                  'status': '確認済み',
+                  'media': 'none'
+              },
+              'x-search-fill-eugen-support-cpu-20260802': {
+                  'id': 'x-search-fill-eugen-support-cpu-20260802',
+                  'title': 'NPCオイゲンをフェディエル以上のサポート火力へ育成',
+                  'summary': 'CPU・放置用サポートキャラクターとしてオイゲンを重点育成し、投稿者の比較ではフェディエルを上回る結果になったという構成紹介です。装備画像が付属していますが、比較対象、計測時間、クエスト、ダメージ値は追加確認が必要です。',
+                  'character': 'オイゲン',
+                  'category': 'CPU・放置',
+                  'attributes': ['CPU', '放置', 'サポート', '装備', 'フェディエル比較', '編成'],
+                  'sourceUrl': 'https://x.com/KamuiTakegami/status/2077516991964012696',
+                  'author': '@KamuiTakegami',
+                  'postedAt': '2026-07-16T07:13:43+09:00',
+                  'registeredAt': registered_at,
+                  'usefulness': 87,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'image'
+              }
+          }
+
+          additions = [
+              {
+                  'id': 'x-search-mak1baoh-katalina-combo-c-20260802',
+                  'title': 'コンボCでアレスゲージを一度に50％回収',
+                  'summary': 'アレスゲージが切れ、蒼天の剣も使えない状況では、コンボC「□→□→□→△」を使うと一度でアレスゲージを50％回収できるという小技です。3段目後に回避を挟むと移動距離を伸ばせるとも説明されています。',
+                  'character': 'カタリナ',
+                  'category': 'キャラクター攻略',
+                  'attributes': ['コンボ', 'アレスゲージ', '回避キャンセル', '立ち回り', 'Tips'],
+                  'sourceUrl': x_search('from:mak1baoh_go "コンボC" "アレスゲージ"'),
+                  'sourceLinkType': 'search',
+                  'author': '@mak1baoh_go',
+                  'postedAt': '',
+                  'registeredAt': registered_at,
+                  'usefulness': 96,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'image'
+              },
+              {
+                  'id': 'x-search-dpf9-fediel-77b-20260802',
+                  'title': 'フェディエルで60秒7.7億ダメージ',
+                  'summary': 'フェディエルの60秒トライアルで7.7億ダメージを記録した画像付き投稿です。装備、召喚石、マスタースキル、具体的な攻撃手順は検索結果上では確認できないため、追加検証が必要です。',
+                  'character': 'フェディエル',
+                  'category': 'キャラクター攻略',
+                  'attributes': ['DPS', '60秒トライアル', '火力', 'ダメージ計測', '画像'],
+                  'sourceUrl': x_search('from:dpF9tkmZkD3AZUA "フェディエル60秒7.7億"'),
+                  'sourceLinkType': 'search',
+                  'author': '@dpF9tkmZkD3AZUA',
+                  'postedAt': '',
+                  'registeredAt': registered_at,
+                  'usefulness': 90,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'image'
+              },
+              {
+                  'id': 'x-search-merridozer-maglielle-7b-20260724',
+                  'title': 'マギラフリラで60秒7億ダメージ',
+                  'summary': 'マギラフリラの60秒計測で7億ダメージを記録した投稿です。画像または動画が付属していますが、装備、召喚石、ダメージ上限、使用コンボは追加確認が必要です。検索結果では2026年7月24日19時23分の投稿として表示されています。',
+                  'character': 'マギラフリラ',
+                  'category': 'キャラクター攻略',
+                  'attributes': ['DPS', '60秒トライアル', '火力', 'ダメージ計測'],
+                  'sourceUrl': x_search('from:merridozer "マギラフリラ" "60秒7億"'),
+                  'sourceLinkType': 'search',
+                  'author': '@merridozer',
+                  'postedAt': '',
+                  'registeredAt': registered_at,
+                  'usefulness': 94,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'video'
+              },
+              {
+                  'id': 'x-search-vayne-pb-maglielle-world-infinity-solo-20260724',
+                  'title': 'マギラフリラ単騎でザ・ワールド・インフィニティをクリア',
+                  'summary': 'マギラフリラ単騎でザ・ワールドのインフィニティ難度をクリアした動画投稿です。検索結果ではYouTube動画への導線を確認できますが、装備構成や討伐時間は未確認です。検索結果では2026年7月24日4時18分の投稿として表示されています。',
+                  'character': 'マギラフリラ',
+                  'category': 'ボス攻略',
+                  'attributes': ['単騎', 'インフィニティ', 'ザ・ワールド', '実戦動画', '高難度'],
+                  'sourceUrl': x_search('from:Vayne_PB "マギラフリラ単騎" "ザ・ワールド" "インフィニティ"'),
+                  'sourceLinkType': 'search',
+                  'author': '@Vayne_PB',
+                  'postedAt': '',
+                  'registeredAt': registered_at,
+                  'usefulness': 92,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'video'
+              },
+              {
+                  'id': 'x-2077520859598917645',
+                  'title': 'コフィンメーカー型ラカムでCHAOS++放置周回',
+                  'summary': 'コフィンメーカー型ラカムをフルアシストで使用し、CHAOS++「黙示ルシファー」を2分48秒、「絶対者ベルゼバブ」を3分31秒でクリアした報告です。装備、マスタースキル、残りのパーティメンバーは投稿画像の追加確認が必要です。',
+                  'character': 'ラカム',
+                  'category': 'CPU・放置',
+                  'attributes': ['フルアシスト', 'CPU', 'コフィンメーカー', 'CHAOS++', 'ルシファー', 'ベルゼバブ', '周回タイム'],
+                  'sourceUrl': 'https://x.com/Rin_gamediary/status/2077520859598917645',
+                  'author': '@Rin_gamediary',
+                  'postedAt': '2026-07-16T07:29:06+09:00',
+                  'registeredAt': registered_at,
+                  'usefulness': 94,
+                  'confidence': '高',
+                  'status': '要追加検証',
+                  'media': 'image'
+              },
+              {
+                  'id': 'x-2077551179031257569',
+                  'title': 'ジャストガードからリンクアタックへつなぐ耐久型ヴェイン',
+                  'summary': 'ヴェインの高い耐久力と安定性を活かし、敵の攻撃をジャストガードしてリンクアタックへ移行する実戦運用です。詳細な装備数値は未確認ですが、ガード主体でも攻撃機会を失いにくいヴェイン固有の立ち回りです。',
+                  'character': 'ヴェイン',
+                  'category': 'キャラクター攻略',
+                  'attributes': ['ジャストガード', 'リンクアタック', '耐久', '生存', '立ち回り', '高難度'],
+                  'sourceUrl': 'https://x.com/nagarebosi0712/status/2077551179031257569',
+                  'author': '@nagarebosi0712',
+                  'postedAt': '2026-07-16T09:29:34+09:00',
+                  'registeredAt': registered_at,
+                  'usefulness': 80,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'none'
+              },
+              {
+                  'id': 'x-2077532885054259241',
+                  'title': '火力低下後も上限増加バフと10万バリアで高難度支援',
+                  'summary': 'ER環境ではカリオストロ自身の火力が下がった一方、ファンタズマゴリアによるダメージ上限増加の付与と、10万相当のバリアによって安定した支援役として運用できるという評価です。バリア量の条件や上限増加量は追加検証が必要です。',
+                  'character': 'カリオストロ',
+                  'category': 'キャラクター攻略',
+                  'attributes': ['ファンタズマゴリア', 'ダメージ上限', 'バリア', '支援', '高難度', '弱体化比較'],
+                  'sourceUrl': 'https://x.com/kemble1_1/status/2077532885054259241',
+                  'author': '@kemble1_1',
+                  'postedAt': '2026-07-16T08:16:53+09:00',
+                  'registeredAt': registered_at,
+                  'usefulness': 88,
+                  'confidence': '中',
+                  'status': '要追加検証',
+                  'media': 'none'
+              }
+          ]
+
+          replaced = 0
+          for index, post in enumerate(posts):
+              post_id = str(post.get('id', '')).strip()
+              if post_id in replacements:
+                  posts[index] = replacements[post_id]
+                  replaced += 1
+
+          assert replaced == 2, f'expected 2 replacements, got {replaced}'
+
+          ids = {str(post.get('id', '')).strip() for post in posts}
+          urls = {str(post.get('sourceUrl', '')).strip() for post in posts}
+          appended = 0
+          for post in additions:
+              if post['id'] in ids or post['sourceUrl'] in urls:
+                  continue
+              posts.append(post)
+              ids.add(post['id'])
+              urls.add(post['sourceUrl'])
+              appended += 1
+
+          assert appended == 7, f'expected 7 additions, got {appended}'
+          assert len(posts) == before + 7, (before, len(posts))
+          assert len({post['id'] for post in posts}) == len(posts), 'duplicate ids'
+          assert len({post['sourceUrl'] for post in posts}) == len(posts), 'duplicate source URLs'
+
+          for post in posts:
+              assert post.get('id') and post.get('title') and post.get('summary')
+              assert post.get('sourceUrl', '').startswith('https://x.com/')
+              assert isinstance(post.get('attributes'), list)
+
+          path.write_text(json.dumps(posts, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps({'before': before, 'after': len(posts), 'added': appended, 'upgraded': replaced}, ensure_ascii=False))
+          PY
+
+      - name: Commit data changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmp/shared-chat-6a6ecf5c
+          git add data/posts.json
           if git diff --cached --quiet; then
-            echo "No extracted changes"
+            echo "No data changes"
           else
-            git commit -m "共有会話の内容を抽出"
+            git commit -m "共有会話からキャラ攻略情報7件を追加し2件を更新"
             git push origin HEAD:${{ github.head_ref }}
           fi
