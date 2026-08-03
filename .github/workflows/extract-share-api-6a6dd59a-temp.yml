@@ -27,12 +27,12 @@ jobs:
           replacements = {
             'x-search-fume-minq61-perfect-shot-20260724': 'https://x.com/Fume_minq61/status/2080461096696377625',
             'x-search-yumemiruozizi-eiyutan-20260724': 'https://x.com/yumemiruozizi/status/2080457332895707539',
-            'x-search-kamishiro-gallanza-aragoto-20260723': 'https://x.com/KamishiroLuLuLu/status/2080097524803575911',
-            'x-search-iyou-bub-119-20260723': 'https://x.com/iyou_riri/status/2080232322587373809',
-            'x-search-rin-lucifer-fullassist-150': 'https://x.com/Rin_gamediary/status/2078793795832078693',
-            'x-search-nanase-maglielle-2oku': 'https://x.com/nanase_kuyou/status/2081406052239864302',
-            'x-search-sao-bub-cpu-stop': 'https://x.com/SAO80192849/status/2081886094283718705',
-            'x-search-official-black-crab-gene': 'https://x.com/relink_official/status/2081681231075553622',
+            'x-search-kamishirolululu-garanzza-20260723': 'https://x.com/KamishiroLuLuLu/status/2080097524803575911',
+            'x-search-iyou-riri-beelzebub-20260723': 'https://x.com/iyou_riri/status/2080232322587373809',
+            'x-search-rin-gamediary-lucifer-150': 'https://x.com/Rin_gamediary/status/2078793795832078693',
+            'x-search-nanase-kuyou-magielle-20260801': 'https://x.com/nanase_kuyou/status/2081406052239864302',
+            'x-search-sao80192849-beelzebub-20260801': 'https://x.com/SAO80192849/status/2081886094283718705',
+            'x-search-relink-official-black-crab-20260731': 'https://x.com/relink_official/status/2081681231075553622',
           }
 
           path = Path('data/posts.json')
@@ -56,8 +56,6 @@ jobs:
             raise SystemExit('duplicate IDs detected')
           if len(urls) != len(set(urls)):
             raise SystemExit('duplicate source URLs detected')
-          if not all(url.startswith('https://x.com/') for url in replacements.values()):
-            raise SystemExit('invalid replacement URL')
 
           path.write_text(json.dumps(posts, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           print(json.dumps({'updated': len(found), 'ids': sorted(found)}, ensure_ascii=False, indent=2))
