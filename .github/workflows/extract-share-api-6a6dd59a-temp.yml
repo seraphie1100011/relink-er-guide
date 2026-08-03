@@ -18,11 +18,12 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Fetch share endpoints
+      - name: Fetch and inspect share page
         run: |
           python - <<'PY'
           from pathlib import Path
-          import json, requests, re
+          from urllib.parse import urlsplit, urlunsplit
+          import html, json, requests, re
 
           out = Path('tmp/share-api-6a6dd59a')
           out.mkdir(parents=True, exist_ok=True)
@@ -57,20 +58,56 @@ jobs:
               report[name] = {'url': url, 'error': repr(e)}
 
           page_file = out / 'page.txt'
+          all_urls = []
+          missing_urls = []
+          contexts = []
           if page_file.exists():
-            text = page_file.read_text(encoding='utf-8', errors='replace')
+            raw = page_file.read_text(encoding='utf-8', errors='replace')
+            text = html.unescape(raw)
+            for _ in range(4):
+              previous = text
+              text = (text
+                .replace('\\u002F', '/')
+                .replace('\\u002f', '/')
+                .replace('\\u003A', ':')
+                .replace('\\u003a', ':')
+                .replace('\\u0026', '&')
+                .replace('\\/', '/')
+                .replace('\\\\', '\\'))
+              if text == previous:
+                break
+
+            pattern = re.compile(r'https://(?:www\.)?(?:x|twitter)\.com/[^\s"\'<>\\]+', re.I)
+            seen = set()
+            for match in pattern.finditer(text):
+              url = match.group(0).rstrip('.,;:!?)]}、。，」』）')
+              url = url.replace('https://twitter.com/', 'https://x.com/').replace('https://www.twitter.com/', 'https://x.com/').replace('https://www.x.com/', 'https://x.com/')
+              if url not in seen:
+                seen.add(url)
+                all_urls.append(url)
+                start = max(0, match.start() - 260)
+                end = min(len(text), match.end() + 260)
+                contexts.append({'url': url, 'context': text[start:end]})
+
+            posts = json.loads(Path('data/posts.json').read_text(encoding='utf-8'))
+            existing = {str(post.get('sourceUrl') or '').strip() for post in posts}
+            missing_urls = [url for url in all_urls if url not in existing]
+
             patterns = {
-              'next_data': r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
-              'conversation_id': r'conversation_id.{0,120}',
-              'mapping': r'"mapping".{0,200}',
+              'conversation_id': r'conversation_id.{0,160}',
+              'create_time': r'create_time.{0,160}',
+              'safe_urls': r'safe_urls.{0,300}',
               'share_id': re.escape(share_id),
             }
-            extracts = {}
-            for key, pattern in patterns.items():
-              matches = re.findall(pattern, text, flags=re.S)
-              extracts[key] = matches[:20]
+            extracts = {key: re.findall(pattern, text, flags=re.S)[:100] for key, pattern in patterns.items()}
             (out / 'page_extracts.json').write_text(json.dumps(extracts, ensure_ascii=False, indent=2), encoding='utf-8')
 
+          (out / 'all_x_urls.json').write_text(json.dumps(all_urls, ensure_ascii=False, indent=2), encoding='utf-8')
+          (out / 'missing_x_urls.json').write_text(json.dumps(missing_urls, ensure_ascii=False, indent=2), encoding='utf-8')
+          (out / 'x_url_contexts.json').write_text(json.dumps(contexts, ensure_ascii=False, indent=2), encoding='utf-8')
+          report['x_url_count'] = len(all_urls)
+          report['missing_x_url_count'] = len(missing_urls)
+          report['missing_x_urls'] = missing_urls
           (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
           print(json.dumps(report, ensure_ascii=False, indent=2))
           PY
@@ -83,6 +120,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No extraction changes"
           else
-            git commit -m "共有ページAPIの取得結果を保存"
+            git commit -m "共有ページ内のX URLを抽出して照合"
             git push origin HEAD:${{ github.head_ref }}
           fi
