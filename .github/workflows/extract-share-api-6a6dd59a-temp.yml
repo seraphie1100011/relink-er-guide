@@ -1,4 +1,4 @@
-name: Extract shared chat API 6a6dd59a
+name: Resolve original shared X posts
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  extract:
+  resolve:
     if: github.head_ref == 'extract-share-api-6a6dd59a-20260803'
     runs-on: ubuntu-latest
     steps:
@@ -18,142 +18,74 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Prepare ChatPeek parser
-        run: |
-          rm -rf /tmp/ChatPeek
-          git clone --depth 1 https://github.com/vl3c/ChatPeek.git /tmp/ChatPeek
-          mkdir -p tmp/share-api-6a6dd59a
-          cp /tmp/ChatPeek/ChatPeek.py tmp/share-api-6a6dd59a/ChatPeek.py
-
-      - name: Compare every conversation branch and URL set
+      - name: Search Yahoo realtime for exact status URLs
         run: |
           python - <<'PY'
           from pathlib import Path
-          from datetime import datetime
-          from zoneinfo import ZoneInfo
-          from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
-          from collections.abc import Mapping
-          import html, json, re, sys
+          from urllib.parse import quote, unquote, urlparse, parse_qs
+          import html, json, re, requests
 
-          sys.path.insert(0, '/tmp/ChatPeek')
-          import ChatPeek
-
-          out = Path('tmp/share-api-6a6dd59a')
+          out = Path('tmp/share-api-6a6dd59a/yahoo')
           out.mkdir(parents=True, exist_ok=True)
-          share_id = '6a6dd59a-64c0-83e-9c4f-bd70dc6ac9df'
-          public_share_id = '6a6dd59a-64c0-83e8-b876-1d347c36e215'
-          share_url = f'https://chatgpt.com/share/{public_share_id}'
-          raw = ChatPeek.fetch_share_page(share_url, headers={'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8'})
-          (out / 'page.txt').write_text(raw, encoding='utf-8')
-
-          loader = ChatPeek.extract_loader_payload(raw)
-          if loader is None:
-            raise SystemExit('loader payload not found')
-          decoded = ChatPeek.decode_loader(loader)
-          loader_data = decoded.get('loaderData', {})
-          route = loader_data.get('routes/share.$shareId.($action)', {}) if isinstance(loader_data, Mapping) else {}
-          server_response = route.get('serverResponse', {}) if isinstance(route, Mapping) else {}
-          data = server_response.get('data', {}) if isinstance(server_response, Mapping) else {}
-          mapping = data.get('mapping', {}) if isinstance(data, Mapping) else {}
-          linear = data.get('linear_conversation', []) if isinstance(data, Mapping) else []
-          linear_ids = {entry.get('id') for entry in linear if isinstance(entry, Mapping) and isinstance(entry.get('id'), str)}
-
-          options = ChatPeek.ExportOptions(include_reasoning=False, include_tool_output=False, include_model_context=False)
-          namer = ChatPeek._AssetNamer()
-          jst = ZoneInfo('Asia/Tokyo')
-          url_pattern = re.compile(r'https://(?:www\.)?(?:x|twitter)\.com/[^\s"\'<>]+', re.I)
-
-          def canonicalize(url: str) -> str:
-            url = html.unescape(url.strip().strip('`<>').rstrip('`.,;:!?)]}、。，」』）'))
-            url = url.replace('https://twitter.com/', 'https://x.com/').replace('https://www.twitter.com/', 'https://x.com/').replace('https://www.x.com/', 'https://x.com/')
-            parts = urlsplit(url)
-            path = re.sub(r'/(photo|video)/\d+$', '', parts.path)
-            query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != 'utm_source']
-            return urlunsplit(('https', 'x.com', path.rstrip('/'), urlencode(query, doseq=True), ''))
-
-          posts = json.loads(Path('data/posts.json').read_text(encoding='utf-8'))
-          existing = {canonicalize(str(post.get('sourceUrl') or '')) for post in posts if post.get('sourceUrl')}
-
-          rows = []
-          all_assistant_urls = []
-          missing_all = []
-          seen_all = set()
-          if not isinstance(mapping, Mapping):
-            mapping = {}
-
-          for node_id, node in mapping.items():
-            if not isinstance(node, Mapping):
-              continue
-            message = node.get('message')
-            if not isinstance(message, Mapping):
-              continue
-            author_info = message.get('author') or {}
-            role = author_info.get('role') if isinstance(author_info, Mapping) else None
-            created_raw = message.get('create_time')
-            created_at = float(created_raw) if isinstance(created_raw, (int, float)) else None
-            created_jst = datetime.fromtimestamp(created_at, tz=jst).isoformat() if created_at is not None else None
-            content = message.get('content') or {}
-            statement = ''
-            if isinstance(content, Mapping):
-              try:
-                statement, _ = ChatPeek.flatten_message_content(message.get('id'), content, message, options, namer)
-              except Exception as exc:
-                statement = f'[flatten error: {exc!r}]'
-            urls = []
-            seen_node = set()
-            if role == 'assistant':
-              for match in url_pattern.findall(statement):
-                url = canonicalize(match)
-                if url and url not in seen_node:
-                  seen_node.add(url)
-                  urls.append(url)
-                if url and url not in seen_all:
-                  seen_all.add(url)
-                  all_assistant_urls.append(url)
-                  if url not in existing:
-                    missing_all.append(url)
-            first_line = next((line.strip() for line in statement.splitlines() if line.strip()), '')
-            rows.append({
-              'nodeId': node_id,
-              'parent': node.get('parent'),
-              'children': node.get('children'),
-              'inLinearConversation': node_id in linear_ids,
-              'role': role,
-              'createdAtJst': created_jst,
-              'firstLine': first_line[:240],
-              'statementLength': len(statement),
-              'xUrlCount': len(urls),
-              'xUrls': urls,
-              'missingFromSite': [url for url in urls if url not in existing],
-            })
-
-          rows.sort(key=lambda row: (row['createdAtJst'] is None, row['createdAtJst'] or '', row['nodeId']))
-          result = {
-            'publicShareId': public_share_id,
-            'internalConversationIdHint': share_id,
-            'chatTitle': data.get('title') if isinstance(data, Mapping) else None,
-            'chatUpdatedAtJst': datetime.fromtimestamp(float(data.get('update_time')), tz=jst).isoformat() if isinstance(data, Mapping) and isinstance(data.get('update_time'), (int, float)) else None,
-            'mappingNodeCount': len(rows),
-            'linearNodeCount': len(linear_ids),
-            'assistantNodeCount': sum(1 for row in rows if row['role'] == 'assistant'),
-            'uniqueAssistantXUrlCount': len(all_assistant_urls),
-            'missingAssistantXUrlCount': len(missing_all),
-            'uniqueAssistantXUrls': all_assistant_urls,
-            'missingAssistantXUrls': missing_all,
-            'nodes': rows,
+          targets = [
+            {'id':'x-search-fume-minq61-perfect-shot-20260724','author':'Fume_minq61','query':'ID:Fume_minq61 パーフェクトショット 60秒 5億'},
+            {'id':'x-search-yumemiruozizi-eiyutan-20260724','author':'yumemiruozizi','query':'ID:yumemiruozizi 英雄譚の真偽をたしかめるぞえ'},
+            {'id':'x-search-kamishiro-gallanza-aragoto-20260723','author':'KamishiroLuLuLu','query':'ID:KamishiroLuLuLu ガランツァの極意 荒事'},
+            {'id':'x-search-iyou-bub-119-20260723','author':'iyou_riri','query':'ID:iyou_riri ベルゼバブ 1:19'},
+            {'id':'x-search-rin-lucifer-fullassist-150','author':'Rin_gamediary','query':'ID:Rin_gamediary 経過時間 1分50秒 ルシファー'},
+            {'id':'x-search-nanase-maglielle-2oku','author':'nanase_kuyou','query':'ID:nanase_kuyou マギラフリラ ハイスコア'},
+            {'id':'x-search-sao-bub-cpu-stop','author':'SAO80192849','query':'ID:SAO80192849 ベルゼバブ放置周回の一幕'},
+            {'id':'x-search-official-black-crab-gene','author':'relink_official','query':'ID:relink_official 恐るべき漆黒のカニジーン'},
+          ]
+          headers = {
+            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
+            'Accept-Language':'ja,en-US;q=0.9,en;q=0.8'
           }
-          (out / 'branch_url_summary.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
-          print(json.dumps(result, ensure_ascii=False, indent=2))
+          status_re = re.compile(r'https?://(?:www\.)?(?:x|twitter)\.com/([A-Za-z0-9_]+)/status/(\d+)', re.I)
+          escaped_re = re.compile(r'https?:\\?/\\?/(?:www\.)?(?:x|twitter)\.com\\?/([A-Za-z0-9_]+)\\?/status\\?/(\d+)', re.I)
+          results=[]
+          for index,t in enumerate(targets,1):
+            url='https://search.yahoo.co.jp/realtime/search?p='+quote(t['query'])+'&ei=UTF-8'
+            r=requests.get(url,headers=headers,timeout=30)
+            raw=r.text
+            (out/f'{index:02d}-{t["author"]}.html').write_text(raw,encoding='utf-8')
+            decoded=html.unescape(raw).replace('\\/','/')
+            candidates=[]
+            seen=set()
+            for username,status_id in status_re.findall(decoded)+escaped_re.findall(raw):
+              if username.lower()!=t['author'].lower():
+                continue
+              exact=f'https://x.com/{username}/status/{status_id}'
+              if exact not in seen:
+                seen.add(exact); candidates.append(exact)
+            # Also decode Yahoo redirect targets when present.
+            for href in re.findall(r'href=["\']([^"\']+)', decoded):
+              href=html.unescape(href)
+              if href.startswith('//'):
+                href='https:'+href
+              if 'rdsig.yahoo.co.jp' in href or 'cksync.php' in href:
+                qs=parse_qs(urlparse(href).query)
+                for key in ('RU','url','u'):
+                  for value in qs.get(key,[]):
+                    value=unquote(value)
+                    m=status_re.search(value)
+                    if m and m.group(1).lower()==t['author'].lower():
+                      exact=f'https://x.com/{m.group(1)}/status/{m.group(2)}'
+                      if exact not in seen:
+                        seen.add(exact); candidates.append(exact)
+            results.append({**t,'searchUrl':url,'httpStatus':r.status_code,'bytes':len(r.content),'candidates':candidates})
+          (out/'exact_url_candidates.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
+          print(json.dumps(results,ensure_ascii=False,indent=2))
           PY
 
-      - name: Commit extraction
+      - name: Commit results
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmp/share-api-6a6dd59a
+          git add tmp/share-api-6a6dd59a/yahoo
           if git diff --cached --quiet; then
-            echo "No extraction changes"
+            echo "No changes"
           else
-            git commit -m "共有会話の全分岐URLを比較"
+            git commit -m "既存8件の個別投稿URL候補を抽出"
             git push origin HEAD:${{ github.head_ref }}
           fi
