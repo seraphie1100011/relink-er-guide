@@ -18,11 +18,17 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
+      - name: Save ChatPeek parser source
+        run: |
+          rm -rf /tmp/ChatPeek
+          git clone --depth 1 https://github.com/vl3c/ChatPeek.git /tmp/ChatPeek
+          mkdir -p tmp/share-api-6a6dd59a
+          cp /tmp/ChatPeek/ChatPeek.py tmp/share-api-6a6dd59a/ChatPeek.py
+
       - name: Fetch and inspect share page
         run: |
           python - <<'PY'
           from pathlib import Path
-          from urllib.parse import urlsplit, urlunsplit
           import html, json, requests, re
 
           out = Path('tmp/share-api-6a6dd59a')
@@ -80,7 +86,7 @@ jobs:
             pattern = re.compile(r'https://(?:www\.)?(?:x|twitter)\.com/[^\s"\'<>\\]+', re.I)
             seen = set()
             for match in pattern.finditer(text):
-              url = match.group(0).rstrip('.,;:!?)]}、。，」』）')
+              url = match.group(0).rstrip('`.,;:!?)]}、。，」』）')
               url = url.replace('https://twitter.com/', 'https://x.com/').replace('https://www.twitter.com/', 'https://x.com/').replace('https://www.x.com/', 'https://x.com/')
               if url not in seen:
                 seen.add(url)
@@ -120,6 +126,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No extraction changes"
           else
-            git commit -m "共有ページ内のX URLを抽出して照合"
+            git commit -m "ChatPeek解析コードとURL抽出結果を保存"
             git push origin HEAD:${{ github.head_ref }}
           fi
