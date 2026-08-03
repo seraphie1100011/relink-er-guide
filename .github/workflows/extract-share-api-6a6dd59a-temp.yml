@@ -25,7 +25,7 @@ jobs:
           mkdir -p tmp/share-api-6a6dd59a
           cp /tmp/ChatPeek/ChatPeek.py tmp/share-api-6a6dd59a/ChatPeek.py
 
-      - name: Parse all mapping messages after 19:00 JST
+      - name: Compare every conversation branch and URL set
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -33,15 +33,16 @@ jobs:
           from zoneinfo import ZoneInfo
           from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
           from collections.abc import Mapping
-          import html, json, re, requests, sys
+          import html, json, re, sys
 
           sys.path.insert(0, '/tmp/ChatPeek')
           import ChatPeek
 
           out = Path('tmp/share-api-6a6dd59a')
           out.mkdir(parents=True, exist_ok=True)
-          share_id = '6a6dd59a-64c0-83e8-b876-1d347c36e215'
-          share_url = f'https://chatgpt.com/share/{share_id}'
+          share_id = '6a6dd59a-64c0-83e-9c4f-bd70dc6ac9df'
+          public_share_id = '6a6dd59a-64c0-83e8-b876-1d347c36e215'
+          share_url = f'https://chatgpt.com/share/{public_share_id}'
           raw = ChatPeek.fetch_share_page(share_url, headers={'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8'})
           (out / 'page.txt').write_text(raw, encoding='utf-8')
 
@@ -54,11 +55,12 @@ jobs:
           server_response = route.get('serverResponse', {}) if isinstance(route, Mapping) else {}
           data = server_response.get('data', {}) if isinstance(server_response, Mapping) else {}
           mapping = data.get('mapping', {}) if isinstance(data, Mapping) else {}
+          linear = data.get('linear_conversation', []) if isinstance(data, Mapping) else []
+          linear_ids = {entry.get('id') for entry in linear if isinstance(entry, Mapping) and isinstance(entry.get('id'), str)}
 
-          jst = ZoneInfo('Asia/Tokyo')
-          threshold = datetime(2026, 8, 3, 19, 0, 0, tzinfo=jst)
           options = ChatPeek.ExportOptions(include_reasoning=False, include_tool_output=False, include_model_context=False)
           namer = ChatPeek._AssetNamer()
+          jst = ZoneInfo('Asia/Tokyo')
           url_pattern = re.compile(r'https://(?:www\.)?(?:x|twitter)\.com/[^\s"\'<>]+', re.I)
 
           def canonicalize(url: str) -> str:
@@ -69,11 +71,13 @@ jobs:
             query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != 'utm_source']
             return urlunsplit(('https', 'x.com', path.rstrip('/'), urlencode(query, doseq=True), ''))
 
-          all_nodes = []
-          after19_nodes = []
-          after19_assistant_urls = []
-          seen_urls = set()
+          posts = json.loads(Path('data/posts.json').read_text(encoding='utf-8'))
+          existing = {canonicalize(str(post.get('sourceUrl') or '')) for post in posts if post.get('sourceUrl')}
 
+          rows = []
+          all_assistant_urls = []
+          missing_all = []
+          seen_all = set()
           if not isinstance(mapping, Mapping):
             mapping = {}
 
@@ -83,61 +87,62 @@ jobs:
             message = node.get('message')
             if not isinstance(message, Mapping):
               continue
-            created_raw = message.get('create_time')
-            created_at = float(created_raw) if isinstance(created_raw, (int, float)) else None
-            created_jst = datetime.fromtimestamp(created_at, tz=jst) if created_at is not None else None
             author_info = message.get('author') or {}
             role = author_info.get('role') if isinstance(author_info, Mapping) else None
+            created_raw = message.get('create_time')
+            created_at = float(created_raw) if isinstance(created_raw, (int, float)) else None
+            created_jst = datetime.fromtimestamp(created_at, tz=jst).isoformat() if created_at is not None else None
             content = message.get('content') or {}
             statement = ''
             if isinstance(content, Mapping):
               try:
-                statement, _assets = ChatPeek.flatten_message_content(message.get('id'), content, message, options, namer)
+                statement, _ = ChatPeek.flatten_message_content(message.get('id'), content, message, options, namer)
               except Exception as exc:
                 statement = f'[flatten error: {exc!r}]'
-            row = {
+            urls = []
+            seen_node = set()
+            if role == 'assistant':
+              for match in url_pattern.findall(statement):
+                url = canonicalize(match)
+                if url and url not in seen_node:
+                  seen_node.add(url)
+                  urls.append(url)
+                if url and url not in seen_all:
+                  seen_all.add(url)
+                  all_assistant_urls.append(url)
+                  if url not in existing:
+                    missing_all.append(url)
+            first_line = next((line.strip() for line in statement.splitlines() if line.strip()), '')
+            rows.append({
               'nodeId': node_id,
               'parent': node.get('parent'),
               'children': node.get('children'),
+              'inLinearConversation': node_id in linear_ids,
               'role': role,
-              'createdAtUnix': created_at,
-              'createdAtJst': created_jst.isoformat() if created_jst else None,
-              'statement': statement,
-            }
-            all_nodes.append(row)
-            if created_jst and created_jst >= threshold:
-              after19_nodes.append(row)
-              if role == 'assistant':
-                for match in url_pattern.findall(statement):
-                  url = canonicalize(match)
-                  if url not in seen_urls:
-                    seen_urls.add(url)
-                    after19_assistant_urls.append(url)
+              'createdAtJst': created_jst,
+              'firstLine': first_line[:240],
+              'statementLength': len(statement),
+              'xUrlCount': len(urls),
+              'xUrls': urls,
+              'missingFromSite': [url for url in urls if url not in existing],
+            })
 
-          all_nodes.sort(key=lambda row: (row['createdAtUnix'] is None, row['createdAtUnix'] or 0, row['nodeId']))
-          after19_nodes.sort(key=lambda row: (row['createdAtUnix'] or 0, row['nodeId']))
-
-          posts = json.loads(Path('data/posts.json').read_text(encoding='utf-8'))
-          existing = {canonicalize(str(post.get('sourceUrl') or '')) for post in posts if post.get('sourceUrl')}
-          missing = [url for url in after19_assistant_urls if url not in existing]
-          already = [url for url in after19_assistant_urls if url in existing]
-
+          rows.sort(key=lambda row: (row['createdAtJst'] is None, row['createdAtJst'] or '', row['nodeId']))
           result = {
-            'shareId': share_id,
+            'publicShareId': public_share_id,
+            'internalConversationIdHint': share_id,
+            'chatTitle': data.get('title') if isinstance(data, Mapping) else None,
             'chatUpdatedAtJst': datetime.fromtimestamp(float(data.get('update_time')), tz=jst).isoformat() if isinstance(data, Mapping) and isinstance(data.get('update_time'), (int, float)) else None,
-            'thresholdJst': threshold.isoformat(),
-            'mappingNodeCount': len(all_nodes),
-            'after19NodeCount': len(after19_nodes),
-            'after19AssistantNodeCount': sum(1 for row in after19_nodes if row['role'] == 'assistant'),
-            'after19UniqueAssistantXUrlCount': len(after19_assistant_urls),
-            'after19MissingXUrlCount': len(missing),
-            'after19AssistantXUrls': after19_assistant_urls,
-            'missingXUrls': missing,
-            'alreadyOnSiteXUrls': already,
+            'mappingNodeCount': len(rows),
+            'linearNodeCount': len(linear_ids),
+            'assistantNodeCount': sum(1 for row in rows if row['role'] == 'assistant'),
+            'uniqueAssistantXUrlCount': len(all_assistant_urls),
+            'missingAssistantXUrlCount': len(missing_all),
+            'uniqueAssistantXUrls': all_assistant_urls,
+            'missingAssistantXUrls': missing_all,
+            'nodes': rows,
           }
-          (out / 'all_mapping_messages.json').write_text(json.dumps(all_nodes, ensure_ascii=False, indent=2), encoding='utf-8')
-          (out / 'mapping_after_19_messages.json').write_text(json.dumps(after19_nodes, ensure_ascii=False, indent=2), encoding='utf-8')
-          (out / 'mapping_after_19_result.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
+          (out / 'branch_url_summary.json').write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding='utf-8')
           print(json.dumps(result, ensure_ascii=False, indent=2))
           PY
 
@@ -149,6 +154,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No extraction changes"
           else
-            git commit -m "19時以降の全マッピングメッセージを解析"
+            git commit -m "共有会話の全分岐URLを比較"
             git push origin HEAD:${{ github.head_ref }}
           fi
