@@ -1,4 +1,4 @@
-name: Resolve original shared X posts
+name: Apply exact X post URLs
 
 on:
   pull_request:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  resolve:
+  apply:
     if: github.head_ref == 'extract-share-api-6a6dd59a-20260803'
     runs-on: ubuntu-latest
     steps:
@@ -18,74 +18,61 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Search Yahoo realtime for exact status URLs
+      - name: Replace search links with exact X post links
         run: |
           python - <<'PY'
           from pathlib import Path
-          from urllib.parse import quote, unquote, urlparse, parse_qs
-          import html, json, re, requests
+          import json
 
-          out = Path('tmp/share-api-6a6dd59a/yahoo')
-          out.mkdir(parents=True, exist_ok=True)
-          targets = [
-            {'id':'x-search-fume-minq61-perfect-shot-20260724','author':'Fume_minq61','query':'ID:Fume_minq61 パーフェクトショット 60秒 5億'},
-            {'id':'x-search-yumemiruozizi-eiyutan-20260724','author':'yumemiruozizi','query':'ID:yumemiruozizi 英雄譚の真偽をたしかめるぞえ'},
-            {'id':'x-search-kamishiro-gallanza-aragoto-20260723','author':'KamishiroLuLuLu','query':'ID:KamishiroLuLuLu ガランツァの極意 荒事'},
-            {'id':'x-search-iyou-bub-119-20260723','author':'iyou_riri','query':'ID:iyou_riri ベルゼバブ 1:19'},
-            {'id':'x-search-rin-lucifer-fullassist-150','author':'Rin_gamediary','query':'ID:Rin_gamediary 経過時間 1分50秒 ルシファー'},
-            {'id':'x-search-nanase-maglielle-2oku','author':'nanase_kuyou','query':'ID:nanase_kuyou マギラフリラ ハイスコア'},
-            {'id':'x-search-sao-bub-cpu-stop','author':'SAO80192849','query':'ID:SAO80192849 ベルゼバブ放置周回の一幕'},
-            {'id':'x-search-official-black-crab-gene','author':'relink_official','query':'ID:relink_official 恐るべき漆黒のカニジーン'},
-          ]
-          headers = {
-            'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36',
-            'Accept-Language':'ja,en-US;q=0.9,en;q=0.8'
+          replacements = {
+            'x-search-fume-minq61-perfect-shot-20260724': 'https://x.com/Fume_minq61/status/2080461096696377625',
+            'x-search-yumemiruozizi-eiyutan-20260724': 'https://x.com/yumemiruozizi/status/2080457332895707539',
+            'x-search-kamishiro-gallanza-aragoto-20260723': 'https://x.com/KamishiroLuLuLu/status/2080097524803575911',
+            'x-search-iyou-bub-119-20260723': 'https://x.com/iyou_riri/status/2080232322587373809',
+            'x-search-rin-lucifer-fullassist-150': 'https://x.com/Rin_gamediary/status/2078793795832078693',
+            'x-search-nanase-maglielle-2oku': 'https://x.com/nanase_kuyou/status/2081406052239864302',
+            'x-search-sao-bub-cpu-stop': 'https://x.com/SAO80192849/status/2081886094283718705',
+            'x-search-official-black-crab-gene': 'https://x.com/relink_official/status/2081681231075553622',
           }
-          status_re = re.compile(r'https?://(?:www\.)?(?:x|twitter)\.com/([A-Za-z0-9_]+)/status/(\d+)', re.I)
-          escaped_re = re.compile(r'https?:\\?/\\?/(?:www\.)?(?:x|twitter)\.com\\?/([A-Za-z0-9_]+)\\?/status\\?/(\d+)', re.I)
-          results=[]
-          for index,t in enumerate(targets,1):
-            url='https://search.yahoo.co.jp/realtime/search?p='+quote(t['query'])+'&ei=UTF-8'
-            r=requests.get(url,headers=headers,timeout=30)
-            raw=r.text
-            (out/f'{index:02d}-{t["author"]}.html').write_text(raw,encoding='utf-8')
-            decoded=html.unescape(raw).replace('\\/','/')
-            candidates=[]
-            seen=set()
-            for username,status_id in status_re.findall(decoded)+escaped_re.findall(raw):
-              if username.lower()!=t['author'].lower():
-                continue
-              exact=f'https://x.com/{username}/status/{status_id}'
-              if exact not in seen:
-                seen.add(exact); candidates.append(exact)
-            # Also decode Yahoo redirect targets when present.
-            for href in re.findall(r'href=["\']([^"\']+)', decoded):
-              href=html.unescape(href)
-              if href.startswith('//'):
-                href='https:'+href
-              if 'rdsig.yahoo.co.jp' in href or 'cksync.php' in href:
-                qs=parse_qs(urlparse(href).query)
-                for key in ('RU','url','u'):
-                  for value in qs.get(key,[]):
-                    value=unquote(value)
-                    m=status_re.search(value)
-                    if m and m.group(1).lower()==t['author'].lower():
-                      exact=f'https://x.com/{m.group(1)}/status/{m.group(2)}'
-                      if exact not in seen:
-                        seen.add(exact); candidates.append(exact)
-            results.append({**t,'searchUrl':url,'httpStatus':r.status_code,'bytes':len(r.content),'candidates':candidates})
-          (out/'exact_url_candidates.json').write_text(json.dumps(results,ensure_ascii=False,indent=2),encoding='utf-8')
-          print(json.dumps(results,ensure_ascii=False,indent=2))
+
+          path = Path('data/posts.json')
+          posts = json.loads(path.read_text(encoding='utf-8'))
+          found = set()
+          for post in posts:
+            post_id = str(post.get('id') or '')
+            if post_id not in replacements:
+              continue
+            post['sourceUrl'] = replacements[post_id]
+            post['sourceLinkType'] = 'exact'
+            found.add(post_id)
+
+          missing = sorted(set(replacements) - found)
+          if missing:
+            raise SystemExit(f'missing target IDs: {missing}')
+
+          ids = [str(post.get('id') or '') for post in posts]
+          urls = [str(post.get('sourceUrl') or '') for post in posts]
+          if len(ids) != len(set(ids)):
+            raise SystemExit('duplicate IDs detected')
+          if len(urls) != len(set(urls)):
+            raise SystemExit('duplicate source URLs detected')
+          if not all(url.startswith('https://x.com/') for url in replacements.values()):
+            raise SystemExit('invalid replacement URL')
+
+          path.write_text(json.dumps(posts, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps({'updated': len(found), 'ids': sorted(found)}, ensure_ascii=False, indent=2))
           PY
 
-      - name: Commit results
+      - name: Remove temporary extraction files
+        run: |
+          rm -rf tmp/share-api-6a6dd59a
+          rm -f tmp/.gitkeep
+          rm -f .github/workflows/extract-share-api-6a6dd59a-temp.yml
+
+      - name: Commit final website data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tmp/share-api-6a6dd59a/yahoo
-          if git diff --cached --quiet; then
-            echo "No changes"
-          else
-            git commit -m "既存8件の個別投稿URL候補を抽出"
-            git push origin HEAD:${{ github.head_ref }}
-          fi
+          git add -A
+          git commit -m "共有会話8件をX個別投稿URLへ更新"
+          git push origin HEAD:${{ github.head_ref }}
